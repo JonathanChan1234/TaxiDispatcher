@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">TaxiDispatcher</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="create_account_text"><u>Don\'t have an account yet?</u></string>
+    <string name="reminder_text">This QR Code will saved at the \'taxi\' folder in your external storage</string>
+
+</resources>

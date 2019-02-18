@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/orderHistoryButton"
+            android:icon="@drawable/ic_order_24px"
+            android:title="Order History" />
+        <item
+            android:id="@+id/manageTaxiButton"
+            android:icon="@drawable/ic_manage_24px"
+            android:title="Manage Your taxi"/>
+        <item
+            android:id="@+id/settingButton"
+            android:icon="@drawable/ic_settings_black_24dp"
+            android:title="Setting"/>
+        <item
+            android:id="@+id/logoutButton"
+            android:title="logout"
+            android:icon="@drawable/ic_logout_24px"/>
+    </group>
+</menu>

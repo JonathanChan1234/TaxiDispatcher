@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="60dp">
+
+    <ImageView
+        android:id="@+id/driverSettingIcon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="20dp" />
+
+    <TextView
+        android:id="@+id/driverSettingItemText"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginStart="10dp"
+        android:gravity="center_vertical"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:layout_toRightOf="@+id/driverSettingIcon"/>
+
+    <Button
+        android:id="@+id/deleteTaxiButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="delete"
+        android:layout_marginStart="20dp"
+        android:textSize="14sp"
+        android:layout_alignParentRight="true"
+        android:background="@color/backgroundBlue"/>
+
+</RelativeLayout>
