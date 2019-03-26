@@ -43,10 +43,6 @@
             android:icon="@drawable/ic_taxidriver_24px"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBwJyQDS_1ZZfic_OLFdB0q7UZC11B9vw4" />
-
         <service
             android:name=".service.PassengerSocketService"
             android:enabled="true"
