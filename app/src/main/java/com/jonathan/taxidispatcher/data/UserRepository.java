@@ -23,9 +23,9 @@ public class UserRepository {
          this.apiService = apiService;
     }
 
-    public MutableLiveData<ApiResponse<AccountUserResponse>> passengerLogIn(String phoneNumber, String password) {
+    public MutableLiveData<ApiResponse<AccountUserResponse>> passengerLogIn(String phoneNumber, String password, String token) {
         MutableLiveData<ApiResponse<AccountUserResponse>> res = new MutableLiveData<>();
-        apiService.passengerSignIn(phoneNumber, password)
+        apiService.passengerSignIn(phoneNumber, password, token)
                 .enqueue(new Callback<AccountUserResponse>() {
                     @Override
                     public void onResponse(Call<AccountUserResponse> call, Response<AccountUserResponse> response) {
@@ -41,9 +41,9 @@ public class UserRepository {
     }
 
     public MutableLiveData<ApiResponse<AccountUserResponse>> passengerRegister(
-            String username, String password, String phoneNumber, String email, String img) {
+            String username, String password, String phoneNumber, String email, String img, String token) {
         MutableLiveData<ApiResponse<AccountUserResponse>> res = new MutableLiveData<>();
-        apiService.passengerCreateAccount(username, password, phoneNumber, email, img)
+        apiService.passengerCreateAccount(username, password, phoneNumber, email, img, token)
                 .enqueue(new Callback<AccountUserResponse>() {
                     @Override
                     public void onResponse(Call<AccountUserResponse> call, Response<AccountUserResponse> response) {
@@ -58,9 +58,9 @@ public class UserRepository {
         return res;
     }
 
-    public MutableLiveData<ApiResponse<AccountDriverResponse>> driverLogIn(String phoneNumber, String password) {
+    public MutableLiveData<ApiResponse<AccountDriverResponse>> driverLogIn(String phoneNumber, String password, String token) {
         MutableLiveData<ApiResponse<AccountDriverResponse>> res = new MutableLiveData<>();
-        apiService.driverSignIn(phoneNumber, password)
+        apiService.driverSignIn(phoneNumber, password, token)
                 .enqueue(new Callback<AccountDriverResponse>() {
                     @Override
                     public void onResponse(Call<AccountDriverResponse> call, Response<AccountDriverResponse> response) {
@@ -76,9 +76,9 @@ public class UserRepository {
     }
 
     public MutableLiveData<ApiResponse<AccountDriverResponse>> driverRegister(
-            String username, String password, String phoneNumber, String email, String img) {
+            String username, String password, String phoneNumber, String email, String img, String token) {
         MutableLiveData<ApiResponse<AccountDriverResponse>> res = new MutableLiveData<>();
-        apiService.driverCreateAccount(username, password, phoneNumber, email, img)
+        apiService.driverCreateAccount(username, password, phoneNumber, email, img, token)
                 .enqueue(new Callback<AccountDriverResponse>() {
                     @Override
                     public void onResponse(Call<AccountDriverResponse> call, Response<AccountDriverResponse> response) {

@@ -5,5 +5,8 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="create_account_text"><u>Don\'t have an account yet?</u></string>
     <string name="reminder_text">This QR Code will saved at the \'taxi\' folder in your external storage</string>
+    <string name="toIsland">過海</string>
+    <string name="notToIsland">不過海</string>
+    <string name="make_call">Make Call</string>
 
 </resources>

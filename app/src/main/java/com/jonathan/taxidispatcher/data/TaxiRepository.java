@@ -5,6 +5,7 @@ import android.arch.lifecycle.MutableLiveData;
 import com.jonathan.taxidispatcher.api.APIInterface;
 import com.jonathan.taxidispatcher.api.ApiResponse;
 import com.jonathan.taxidispatcher.data.model.StandardResponse;
+import com.jonathan.taxidispatcher.data.model.TaxiSignInResponse;
 import com.jonathan.taxidispatcher.data.model.Taxis;
 
 import javax.inject.Inject;
@@ -23,17 +24,17 @@ public class TaxiRepository {
         this.apiService = apiService;
     }
 
-    public void taxiLogIn(String phoneNumber, String password, Integer driverId, OnDataReadyInterface dataReadyInterface) {
+    public void taxiLogIn(String phoneNumber, String password, Integer driverId, SignInResponseCallBack callBack) {
         apiService.signInTaxi(phoneNumber, password, driverId)
-                .enqueue(new Callback<StandardResponse>() {
+                .enqueue(new Callback<TaxiSignInResponse>() {
                     @Override
-                    public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
-                       dataReadyInterface.onDataReady(new ApiResponse<StandardResponse>(response));
+                    public void onResponse(Call<TaxiSignInResponse> call, Response<TaxiSignInResponse> response) {
+                        callBack.onCallBack(new ApiResponse<TaxiSignInResponse>(response));
                     }
 
                     @Override
-                    public void onFailure(Call<StandardResponse> call, Throwable t) {
-                        dataReadyInterface.onDataReady(new ApiResponse<StandardResponse>(t));
+                    public void onFailure(Call<TaxiSignInResponse> call, Throwable t) {
+                        callBack.onCallBack(new ApiResponse<TaxiSignInResponse>(t));
                     }
                 });
     }
@@ -88,7 +89,26 @@ public class TaxiRepository {
                 });
     }
 
+    public void signoutTaxi(Integer taxiID, Integer driverID, OnDataReadyInterface onDataReadyInterface) {
+        apiService.signoutTaxi(taxiID, driverID)
+                .enqueue(new Callback<StandardResponse>() {
+                    @Override
+                    public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
+                        onDataReadyInterface.onDataReady(new ApiResponse<StandardResponse>(response));
+                    }
+
+                    @Override
+                    public void onFailure(Call<StandardResponse> call, Throwable t) {
+                        onDataReadyInterface.onDataReady(new ApiResponse<StandardResponse>(t));
+                    }
+                });
+    }
+
     public interface OnDataReadyInterface {
         public void onDataReady(ApiResponse<StandardResponse> response);
+    }
+
+    public interface SignInResponseCallBack {
+        public void onCallBack(ApiResponse<TaxiSignInResponse> response);
     }
 }

@@ -17,8 +17,10 @@ import com.jonathan.taxidispatcher.data.LocationRepository;
 import com.jonathan.taxidispatcher.data.TransactionRepository;
 import com.jonathan.taxidispatcher.data.model.DirectionModel;
 import com.jonathan.taxidispatcher.data.model.PlaceResource;
+import com.jonathan.taxidispatcher.data.model.RideShareResource;
 import com.jonathan.taxidispatcher.data.model.TranscationResource;
 import com.jonathan.taxidispatcher.utils.AbsentLiveData;
+import com.jonathan.taxidispatcher.utils.SingleLiveEvent;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -29,6 +31,7 @@ public class PassengerMainViewModel extends ViewModel {
     private LiveData<ApiResponse<PlaceResource>> destinationPointResponse;
     private LiveData<ApiResponse<DirectionModel>> routeData;
     private LiveData<ApiResponse<TranscationResource>> transactionResource = new MutableLiveData<>();
+    public SingleLiveEvent<ApiResponse<RideShareResource>> rideShareResource = new SingleLiveEvent<>();
 
     private MutableLiveData<LatLng> pickUpPoint = new MutableLiveData<>();
     private MutableLiveData<LatLng> destinationPoint = new MutableLiveData<>();
@@ -47,9 +50,7 @@ public class PassengerMainViewModel extends ViewModel {
         pickupPointResponse = Transformations.switchMap(pickUpPoint, new Function<LatLng, LiveData<ApiResponse<PlaceResource>>>() {
             @Override
             public LiveData<ApiResponse<PlaceResource>> apply(LatLng input) {
-                Log.d("isLoading", "set to false");
                 isLoading.set(false);
-                Log.d("isLoading", isLoading.get() + "");
                 if(input == null) {
                     return AbsentLiveData.create();
                 } else {
@@ -72,8 +73,6 @@ public class PassengerMainViewModel extends ViewModel {
 
     public void searchPickupPoint(LatLng latLng) {
         isLoading.set(true);
-        Log.d("isLoading", "set to true");
-        Log.d("isLoading", isLoading.get() + "");
         pickUpPoint.setValue(latLng);
     }
 
@@ -112,4 +111,16 @@ public class PassengerMainViewModel extends ViewModel {
                 des_arr, meet_up_time, requirement);
         return transactionResource;
     }
+
+    public SingleLiveEvent<ApiResponse<RideShareResource>> makeRideShare(Integer userid,
+                                                                         Double start_lat,
+                                                                         Double start_long,
+                                                                         String start_addr,
+                                                                         Double des_lat,
+                                                                         Double des_long,
+                                                                         String des_addr) {
+        rideShareResource = transactionRepository.makeShareRide(userid, start_lat, start_long, start_addr, des_lat, des_long, des_addr);
+        return rideShareResource;
+    }
+
 }

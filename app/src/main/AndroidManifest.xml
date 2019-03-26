@@ -21,7 +21,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-
         <activity
             android:name=".ui.start_main.StartActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
@@ -32,15 +31,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.passenger_main.PassengerMainActivity"
             android:icon="@drawable/ic_taxi_24px"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
         <activity
-            android:name=".ui.passenger_transaction.PassengerTransactionActivity" />
-
+            android:name=".ui.passenger_transaction.PassengerTransactionActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".ui.driver_main.DriverMainActivity"
             android:icon="@drawable/ic_taxidriver_24px"
@@ -52,12 +49,31 @@
 
         <service
             android:name=".service.PassengerSocketService"
-            android:exported="true"
-            android:enabled="true"/>
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".service.DriverSocketService"
+            android:enabled="true"
+            android:exported="true" />
+        <service android:name=".service.MessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />
+
+        <activity android:name=".ui.driver_transaction.DriverTransactionActivity" />
+        <activity android:name=".ui.passenger_rideshare.PassengerRideShareActivity" />
+
+        <service
+            android:name=".ui.passenger_rideshare.PassengerShareRideSocketService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".ui.passenger_transaction.RatingActivity"></activity>
     </application>
 
 </manifest>

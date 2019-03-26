@@ -18,6 +18,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.jonathan.taxidispatcher.api.ApiResponse;
 import com.jonathan.taxidispatcher.data.model.AccountDriverResponse;
 import com.jonathan.taxidispatcher.data.model.AccountUserResponse;
@@ -155,66 +159,82 @@ public class CreateAccountFragment extends Fragment implements Injectable {
         } else {
             img = "";
         }
-        if (binding.passengerButtonInSignIn.isChecked()) {
-            viewModel.passengerRegister(username, password, phoneNumber, email, img)
-                    .observe(this, new Observer<ApiResponse<AccountUserResponse>>() {
-                        @Override
-                        public void onChanged(@Nullable ApiResponse<AccountUserResponse> response) {
-                            if (response != null) {
-                                if (response.isSuccessful()) {
-                                    if (response.body.success == 1) {
-                                        Session.logIn(getContext(),
-                                                response.body.user.id,
-                                                response.body.user.phonenumber,
-                                                response.body.user.username,
-                                                response.body.user.email,
-                                                "user",
-                                                response.body.access_token
-                                        );
-                                        Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        startActivity(intent);
-                                    } else {    //Login unsuccessfully
-                                        Toast.makeText(getContext(),
-                                                Utils.stringListToString(response.body.message),
-                                                Toast.LENGTH_SHORT).show();
-                                    }
-                                } else {
-                                    Toast.makeText(getContext(), "Network connection issue", Toast.LENGTH_SHORT).show();
-                                }
-                            }
+        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+            @Override
+            public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                if (!task.isSuccessful()) {
+                    Toast.makeText(getContext(), "Google Service Not available", Toast.LENGTH_SHORT).show();
+                } else {
+                    if (task.getResult() != null) {
+                        String token = task.getResult().getToken();
+                        if (binding.passengerButtonInSignIn.isChecked()) {
+
+                            viewModel.passengerRegister(username, password, phoneNumber, email, img, token)
+                                    .observe(CreateAccountFragment.this, new Observer<ApiResponse<AccountUserResponse>>() {
+                                        @Override
+                                        public void onChanged(@Nullable ApiResponse<AccountUserResponse> response) {
+                                            if (response != null) {
+                                                if (response.isSuccessful()) {
+                                                    if (response.body.success == 1) {
+                                                        Session.logIn(getContext(),
+                                                                response.body.user.id,
+                                                                response.body.user.phonenumber,
+                                                                response.body.user.username,
+                                                                response.body.user.email,
+                                                                "user",
+                                                                response.body.access_token
+                                                        );
+                                                        Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
+                                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                        startActivity(intent);
+                                                    } else {    //Login unsuccessfully
+                                                        Toast.makeText(getContext(),
+                                                                Utils.stringListToString(response.body.message),
+                                                                Toast.LENGTH_SHORT).show();
+                                                    }
+                                                } else {
+                                                    Toast.makeText(getContext(), "Network connection issue", Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                        }
+                                    });
+                        } else {
+                            viewModel.driverRegister(username, password, phoneNumber, email, img, token)
+                                    .observe(CreateAccountFragment.this, new Observer<ApiResponse<AccountDriverResponse>>() {
+                                        @Override
+                                        public void onChanged(@Nullable ApiResponse<AccountDriverResponse> response) {
+                                            if (response != null) {
+                                                if (response.isSuccessful()) {
+                                                    if (response.body.success == 1) {
+                                                        Session.logIn(getContext(),
+                                                                response.body.user.id,
+                                                                response.body.user.phonenumber,
+                                                                response.body.user.username,
+                                                                response.body.user.email,
+                                                                "driver",
+                                                                response.body.access_token
+                                                        );
+                                                        Intent intent = new Intent(getActivity(), DriverMainActivity.class);
+                                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                        startActivity(intent);
+                                                    }
+                                                } else {    //Login unsuccessfully
+                                                    Toast.makeText(getContext(),
+                                                            Utils.stringListToString(response.body.message),
+                                                            Toast.LENGTH_SHORT).show();
+                                                }
+                                            } else {
+                                                Toast.makeText(getContext(), "Network connection issue", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
                         }
-                    });
-        } else {
-            viewModel.driverRegister(username, password, phoneNumber, email, img)
-                    .observe(this, new Observer<ApiResponse<AccountDriverResponse>>() {
-                        @Override
-                        public void onChanged(@Nullable ApiResponse<AccountDriverResponse> response) {
-                            if (response != null) {
-                                if (response.isSuccessful()) {
-                                    if (response.body.success == 1) {
-                                        Session.logIn(getContext(),
-                                                response.body.user.id,
-                                                response.body.user.phonenumber,
-                                                response.body.user.username,
-                                                response.body.user.email,
-                                                "driver",
-                                                response.body.access_token
-                                        );
-                                        Intent intent = new Intent(getActivity(), DriverMainActivity.class);
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        startActivity(intent);
-                                    }
-                                } else {    //Login unsuccessfully
-                                    Toast.makeText(getContext(),
-                                            Utils.stringListToString(response.body.message),
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                Toast.makeText(getContext(), "Network connection issue", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-        }
+                    } else {
+
+                    }
+                }
+            }
+        });
+
     }
 }

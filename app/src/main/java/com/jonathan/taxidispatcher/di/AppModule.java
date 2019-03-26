@@ -4,8 +4,11 @@ import android.arch.persistence.room.Room;
 
 import com.jonathan.taxidispatcher.api.APIInterface;
 import com.jonathan.taxidispatcher.api.GoogleAPIInterface;
+import com.jonathan.taxidispatcher.room.DriverDao;
+import com.jonathan.taxidispatcher.room.RideShareTransactionDao;
 import com.jonathan.taxidispatcher.room.TaxiDb;
 import com.jonathan.taxidispatcher.room.TransactionDao;
+import com.jonathan.taxidispatcher.service.DriverSyncAdapter;
 
 import java.util.concurrent.TimeUnit;
 
@@ -64,12 +67,25 @@ public class AppModule {
     @Provides
     @Singleton
     TaxiDb provideDb(TaxiApp app) {
-        return Room.databaseBuilder(app, TaxiDb.class, "taxidispatcher.db").build();
+        return TaxiDb.getDb(app);
     }
+
 
     @Provides
     @Singleton
-    TransactionDao provideTranscationDao(TaxiDb db) {
+    TransactionDao provideTransactionDao(TaxiDb db) {
         return db.transactionDao();
     }
+
+//    @Provides
+//    @Singleton
+//    RideShareTransactionDao provideRideShareTransactionDao(TaxiDb db) {
+//        return db.rideShareTransactionDao();
+//    }
+//
+//    @Provides
+//    @Singleton
+//    DriverDao provideDriverDao(TaxiDb db) {
+//        return db.driverDao();
+//    }
 }

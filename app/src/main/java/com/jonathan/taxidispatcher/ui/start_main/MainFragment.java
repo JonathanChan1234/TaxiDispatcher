@@ -5,6 +5,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
@@ -14,6 +15,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.jonathan.taxidispatcher.api.APIClient;
 import com.jonathan.taxidispatcher.api.ApiResponse;
 import com.jonathan.taxidispatcher.data.UserRepository;
@@ -63,62 +69,78 @@ public class MainFragment extends Fragment implements Injectable {
         super.onActivityCreated(savedInstanceState);
         viewModel = ViewModelProviders.of(this, factory).get(LogInViewModel.class);
         binding.phoneTextSignIn.setText(Session.getPhoneNumber(getContext()));
+        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+            @Override
+            public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                if (!task.isSuccessful()) {
+                    Toast.makeText(getContext(), "Google Service Not available", Toast.LENGTH_SHORT).show();
+                }
 
-        binding.signInButton.setOnClickListener(view -> {
-            String phoneNumber = binding.phoneTextSignIn.getText().toString();
-            String password = binding.passwordTextSignIn.getText().toString();
-            if(!TextUtils.isEmpty(phoneNumber) &&
-                    !TextUtils.isEmpty(password)) {
-                if(binding.passengerButtonInSignIn.isChecked()) {
-                    viewModel.passengerLogIn(phoneNumber, password).observe(this, new Observer<ApiResponse<AccountUserResponse>>() {
-                        @Override
-                        public void onChanged(@Nullable ApiResponse<AccountUserResponse> response) {
-                            if(response.isSuccessful()) {
-                                if(response.body.success == 1) {
-                                    Session.logIn(getContext(),
-                                            response.body.user.id,
-                                            response.body.user.phonenumber,
-                                            response.body.user.username,
-                                            response.body.user.email,
-                                            "user",
-                                            response.body.access_token
-                                    );
-                                    Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    startActivity(intent);
-                                } else {
-                                    Toast.makeText(getContext(), Utils.stringListToString(response.body.message), Toast.LENGTH_SHORT).show();
-                                }
+                if (task.getResult() != null) {
+                    // Get new Instance ID token
+                    String token = task.getResult().getToken();
+                    binding.signInButton.setOnClickListener(view -> {
+                        String phoneNumber = binding.phoneTextSignIn.getText().toString();
+                        String password = binding.passwordTextSignIn.getText().toString();
+                        if (!TextUtils.isEmpty(phoneNumber) &&
+                                !TextUtils.isEmpty(password)) {
+                            if (binding.passengerButtonInSignIn.isChecked()) {
+                                viewModel.passengerLogIn(phoneNumber, password, token).observe(MainFragment.this, new Observer<ApiResponse<AccountUserResponse>>() {
+                                    @Override
+                                    public void onChanged(@Nullable ApiResponse<AccountUserResponse> response) {
+                                        if (response.isSuccessful()) {
+                                            if (response.body.success == 1) {
+                                                Session.logIn(getContext(),
+                                                        response.body.user.id,
+                                                        response.body.user.phonenumber,
+                                                        response.body.user.username,
+                                                        response.body.user.email,
+                                                        "user",
+                                                        response.body.access_token
+                                                );
+                                                Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
+                                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                startActivity(intent);
+                                            } else {
+                                                Toast.makeText(getContext(), Utils.stringListToString(response.body.message), Toast.LENGTH_SHORT).show();
+                                            }
+                                        } else {
+                                            Log.d("Login check", response.errorMessage);
+                                            Toast.makeText(getContext(), "Network Connection error", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
                             } else {
-                                Log.d("Login check", response.errorMessage);
-                                Toast.makeText(getContext(), "Network Connection error", Toast.LENGTH_SHORT).show();
+                                viewModel.driverLogIn(phoneNumber, password, token).observe(MainFragment.this, new Observer<ApiResponse<AccountDriverResponse>>() {
+                                    @Override
+                                    public void onChanged(@Nullable ApiResponse<AccountDriverResponse> response) {
+                                        if (response.isSuccessful()) {
+                                            if (response.body.success == 1) {
+                                                Session.logIn(getContext(),
+                                                        response.body.user.id,
+                                                        response.body.user.phonenumber,
+                                                        response.body.user.username,
+                                                        response.body.user.email,
+                                                        "driver",
+                                                        response.body.access_token
+                                                );
+                                                Intent intent = new Intent(getActivity(), DriverMainActivity.class);
+                                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                startActivity(intent);
+                                            } else {
+                                                Toast.makeText(getContext(), Utils.stringListToString(response.body.message), Toast.LENGTH_SHORT).show();
+                                            }
+                                        } else {
+                                            Toast.makeText(getContext(), "Network Connection error", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
                             }
                         }
                     });
                 } else {
-                    viewModel.driverLogIn(phoneNumber, password).observe(this, new Observer<ApiResponse<AccountDriverResponse>>() {
-                        @Override
-                        public void onChanged(@Nullable ApiResponse<AccountDriverResponse> response) {
-                            if(response.isSuccessful()) {
-                                if(response.body.success == 1) {
-                                    Session.logIn(getContext(),
-                                            response.body.user.id,
-                                            response.body.user.phonenumber,
-                                            response.body.user.username,
-                                            response.body.user.email,
-                                            "driver",
-                                            response.body.access_token
-                                    );
-                                    Intent intent = new Intent(getActivity(), DriverMainActivity.class);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    startActivity(intent);
-                                } else {
-                                    Toast.makeText(getContext(), Utils.stringListToString(response.body.message), Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                Toast.makeText(getContext(), "Network Connection error", Toast.LENGTH_SHORT).show();
-                            }
-                        }
+                    binding.signInButton.setOnClickListener(view -> {
+                        Toast.makeText(getContext(), "Google Service Not available", Toast.LENGTH_SHORT).show();
                     });
                 }
             }

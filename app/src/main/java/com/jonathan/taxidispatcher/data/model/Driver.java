@@ -1,6 +1,8 @@
 package com.jonathan.taxidispatcher.data.model;
 
+import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.Index;
 import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
@@ -58,5 +60,17 @@ public class Driver implements Serializable {
     @Nullable
     @Ignore
     List<Rating> rating;
+
+    @SerializedName("transcation_type")
+    @Expose
+    @Nullable
+    @Ignore
+    String transcation_type;
+
+    @SerializedName("transcation_id")
+    @Expose
+    @Nullable
+    @Ignore
+    Integer transcation_id;
 
 }

@@ -16,6 +16,9 @@ public class Session {
     public static final String TRANSACTION_ID = "TRANSACTION_ID";
     public static final String EMAIL = "email";
     public static final String ID = "id";
+    public static final String TAXI = "TAXI";
+    public static final String TAXI_NAME = "taxi name";
+    public static final String SHARE_RIDE_ID = "shareRideId";
 
 
     private static SharedPreferences getPreferences(Context context) {
@@ -71,12 +74,28 @@ public class Session {
         editor.apply();
     }
 
+    public static void saveCurrentShareRideId(Context context, int id) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putInt(SHARE_RIDE_ID, id);
+        editor.apply();
+    }
+
+    public static int getShareRideId(Context context) {
+        return getPreferences(context).getInt(SHARE_RIDE_ID, 0);
+    }
+
     public static void saveCurrentTransaction(Context context, int id, Transcation transcation) {
         SharedPreferences.Editor editor = getPreferences(context).edit();
         editor.putInt(TRANSACTION_ID, id);
         Gson gson = new Gson();
         String serializedData = gson.toJson(transcation);
         editor.putString(TRANSACTION, serializedData);
+        editor.apply();
+    }
+
+    public static void saveCurrentTransactionID(Context context, Integer id) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putInt(TRANSACTION_ID, id);
         editor.apply();
     }
 
@@ -91,5 +110,25 @@ public class Session {
             return gson.fromJson(serializedData, Transcation.class);
         }
         return null;
+    }
+
+    public static void saveTaxiPlateNumber(Context context, String plateNumber) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putString(TAXI_NAME, plateNumber);
+        editor.apply();
+    }
+
+    public static String getTaxiPlateNumber(Context context) {
+        return getPreferences(context).getString(TAXI_NAME, "");
+    }
+
+    public static void saveTaxiId(Context context, int id) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putInt(TAXI, id);
+        editor.apply();
+    }
+
+    public static int getTaxiId(Context context) {
+        return getPreferences(context).getInt(TAXI, 0);
     }
 }

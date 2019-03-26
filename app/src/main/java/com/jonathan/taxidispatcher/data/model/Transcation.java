@@ -12,13 +12,13 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 
 @Entity(indices = {@Index("id")}, primaryKeys = {"id"})
-public class Transcation implements Serializable {
+public class Transcation {
     @SerializedName("id")
     @Expose
     public Integer id;
     @SerializedName("user")
     @Expose
-    @Ignore
+    @Embedded(prefix = "user_")
     public User user;
     @SerializedName("driver")
     @Expose
@@ -66,4 +66,8 @@ public class Transcation implements Serializable {
     @Nullable
     @Embedded(prefix = "taxi_")
     public Taxi taxi;
+    @SerializedName("driverReachTime")
+    @Expose
+    @Nullable
+    public String driverReachTime;
 }

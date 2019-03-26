@@ -1,0 +1,99 @@
+{
+  "project_info": {
+    "project_number": "945011858319",
+    "firebase_url": "https://bindserviceapplication.firebaseio.com",
+    "project_id": "bindserviceapplication",
+    "storage_bucket": "bindserviceapplication.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:945011858319:android:d0711478ee1c72eb",
+        "android_client_info": {
+          "package_name": "com.jonathan.bindserviceapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "945011858319-tpmbn80k78jri0t214lvd19n4g127qoj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jonathan.bindserviceapplication",
+            "certificate_hash": "f864007f1b1adf06236a784b696f3212cdc1ade8"
+          }
+        },
+        {
+          "client_id": "945011858319-ob9c1oqk3b9aidp6vtgsio933i48cmk9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDt9AG9pqAWUD6pHHxcKop3BNDdXdRy32Q"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "945011858319-ob9c1oqk3b9aidp6vtgsio933i48cmk9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:945011858319:android:9c35d62af7552826",
+        "android_client_info": {
+          "package_name": "com.jonathan.taxidispatcher"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "945011858319-7g5m13nciu389c37msmcqmtv1dl7bu6i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jonathan.taxidispatcher",
+            "certificate_hash": "f864007f1b1adf06236a784b696f3212cdc1ade8"
+          }
+        },
+        {
+          "client_id": "945011858319-ob9c1oqk3b9aidp6vtgsio933i48cmk9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDt9AG9pqAWUD6pHHxcKop3BNDdXdRy32Q"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "945011858319-ob9c1oqk3b9aidp6vtgsio933i48cmk9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

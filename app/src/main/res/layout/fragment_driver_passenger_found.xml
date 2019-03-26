@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/transactionTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:background="@color/backgroundBlue"
+                    android:gravity="center"
+                    android:text="Request"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TableRow
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_height="match_parent"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/cell_shape_blue"
+                            android:padding="8dp"
+                            android:text="Order ID"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_height="match_parent"
+                            android:width="0dp"
+                            android:layout_weight="3"
+                            android:id="@+id/idText"
+                            android:layout_width="match_parent"
+                            android:background="@drawable/cell_shape_blue"
+                            android:padding="8dp"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:background="@drawable/cell_shape_blue"
+                            android:padding="8dp"
+                            android:text="Route"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_height="match_parent"
+                            android:layout_weight="3"
+                            android:layout_width="0dp"
+                            android:id="@+id/routeText"
+                            android:background="@drawable/cell_shape_blue"
+                            android:padding="8dp"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:background="@drawable/cell_shape_blue"
+                            android:padding="8dp"
+                            android:text="Type"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_height="match_parent"
+                            android:layout_weight="3"
+                            android:layout_width="0dp"
+                            android:id="@+id/requirementText"
+                            android:background="@drawable/cell_shape_blue"
+                            android:padding="8dp"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:background="@drawable/cell_shape_blue"
+                            android:padding="8dp"
+                            android:text="Status"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_height="match_parent"
+                            android:layout_weight="3"
+                            android:layout_width="0dp"
+                            android:id="@+id/statusText"
+                            android:background="@drawable/cell_shape_blue"
+                            android:padding="8dp"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+                    </TableRow>
+                </TableLayout>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp">
+                    <fragment
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        xmlns:tools="http://schemas.android.com/tools"
+                        android:id="@+id/routeMap"
+                        android:name="com.google.android.gms.maps.SupportMapFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        tools:context=".ui.driver_transaction.DriverTransactionActivity"/>
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/toDestinationButton"
+                        android:text="To Destination"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentEnd="true"
+                        android:background="@drawable/round_button"
+                        android:layout_gravity="center"/>
+                </RelativeLayout>
+
+
+                <TextView
+                    android:layout_marginTop="10dp"
+                    android:id="@+id/timeCounterText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+
+
+            </LinearLayout>
+
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:stretchColumns="*">
+
+                <TableRow>
+
+                    <Button
+                        android:id="@+id/acceptDealButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="10dp"
+                        android:background="#0059B3"
+                        android:text="Accept" />
+
+                    <Button
+                        android:id="@+id/rejectDealButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reject" />
+                </TableRow>
+            </TableLayout>
+        </RelativeLayout>
+
+    </FrameLayout>
+</layout>

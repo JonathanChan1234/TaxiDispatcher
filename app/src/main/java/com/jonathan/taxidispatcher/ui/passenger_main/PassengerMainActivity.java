@@ -17,8 +17,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jonathan.taxidispatcher.R;
+import com.jonathan.taxidispatcher.api.APIInterface;
+import com.jonathan.taxidispatcher.data.model.StandardResponse;
 import com.jonathan.taxidispatcher.di.Injectable;
 import com.jonathan.taxidispatcher.session.Session;
 import com.jonathan.taxidispatcher.ui.start_main.StartActivity;
@@ -28,6 +31,9 @@ import javax.inject.Inject;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PassengerMainActivity extends AppCompatActivity implements HasSupportFragmentInjector, Injectable {
     static FragmentManager manager;
@@ -35,6 +41,8 @@ public class PassengerMainActivity extends AppCompatActivity implements HasSuppo
 
     @Inject
     DispatchingAndroidInjector<Fragment> fragmentDispatchingAndroidInjector;
+    @Inject
+    APIInterface apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +84,7 @@ public class PassengerMainActivity extends AppCompatActivity implements HasSuppo
         changeFragment(PassengerMakeCallFragment.newInstance(), true);
     }
 
-    public static void toDetailsFragment() {
+    public static void toConfirmFragment() {
         changeFragment(PassengerConfirmFragment.newInstance(), false);
     }
 
@@ -118,10 +126,26 @@ public class PassengerMainActivity extends AppCompatActivity implements HasSuppo
     }
 
     private void logout() {
-        Session.logout(this);
-        Intent intent = new Intent(PassengerMainActivity.this, StartActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+        apiService.passengerLogout(Session.getUserId(this))
+                .enqueue(new Callback<StandardResponse>() {
+                    @Override
+                    public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
+                        if(response.isSuccessful()) {
+                            if(response.body().success == 1) {
+                                Session.logout(PassengerMainActivity.this);
+                                Intent intent = new Intent(PassengerMainActivity.this, StartActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<StandardResponse> call, Throwable t) {
+                        Toast.makeText(getApplicationContext(), "Network Connection issue", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
     }
 
     @Override

@@ -21,9 +21,6 @@ public abstract class TransactionDao {
     @Query("SELECT * FROM Transcation WHERE id in (:transcationId)")
     public abstract LiveData<Transcation> loadTransactionById(Integer transcationId);
 
-    @Query("UPDATE Transcation SET status = :status, driver_id = :driverId, driver_phonenumber = :phonenumber" +
-            ", driver_username = :username, driver_email = :email WHERE id=:transcationId")
-    public abstract void updateTranscationStatus(Integer status, Integer driverId,
-                                                 String phonenumber, String username,
-                                                 String email, Integer transcationId);
+    @Query("UPDATE Transcation SET status = :status WHERE id=:transcationId")
+    public abstract void updateTransactionStatus(Integer status, Integer transcationId);
 }

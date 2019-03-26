@@ -10,7 +10,7 @@ public class Taxi {
     @SerializedName("id")
     @Expose
     public Integer id;
-    @SerializedName("platenumber")
+    @SerializedName("plateNumber")
     @Expose
     public String platenumber;
     @SerializedName("last_login_time")
@@ -25,7 +25,7 @@ public class Taxi {
     @Expose
     @Nullable
     @Ignore
-    public Driver driverId;
+    public String driverId;
     @SerializedName("created_at")
     @Expose
     public String createdAt;

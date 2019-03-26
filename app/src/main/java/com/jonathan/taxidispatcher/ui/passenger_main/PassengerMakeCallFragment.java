@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -182,6 +183,7 @@ public class PassengerMakeCallFragment extends Fragment implements
     @Override
     public void onPause() {
         super.onPause();
+        if(positioningDialog != null) positioningDialog.hide();
         if(apiClient.isConnected()) apiClient.disconnect();
         if(fusedLocationProviderClient != null) fusedLocationProviderClient.removeLocationUpdates(mLocationCallback);
     }
@@ -403,7 +405,7 @@ public class PassengerMakeCallFragment extends Fragment implements
             dataBundle.putString(DES_ADDR, binding.destinationPointSelector.getText().toString());
             dataBundle.putString(TIME, binding.timePicker.getText().toString());
             viewModel.transcationData.setValue(dataBundle);
-            PassengerMainActivity.toDetailsFragment();
+            PassengerMainActivity.toConfirmFragment();
         } else {
             Toast.makeText(applicationContext, "Please select both the pick-up and destination point",
                     Toast.LENGTH_SHORT).show();

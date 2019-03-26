@@ -9,4 +9,6 @@
     <color name="contentBackgroundgreen">#61f9ab</color>
     <color name="white">#FFFFFF</color>
     <color name="lightBlue">#0099ff</color>
+    <color name="theme_blue">#0059B3</color>
+    <color name="theme_black">#333333</color>
 </resources>

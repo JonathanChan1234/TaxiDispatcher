@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <data>
+        <variable
+            name="viewModel"
+            type="com.jonathan.taxidispatcher.ui.driver_transaction.DriverTransactionViewModel"/>
+    </data>
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ui.driver_transaction.DriverWaitingFragment">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/backgroundBlue">
+
+            <Button
+                android:id="@+id/startSearchingPassengerButton"
+                android:layout_width="350dp"
+                android:layout_height="150dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="50dp"
+                android:text="Not On Serve"
+                android:textColor="@color/white"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/plateNumberText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="10dp"
+                android:textSize="20sp"
+                android:layout_below="@+id/startSearchingPassengerButton"
+                android:text="YT98777"/>
+
+            <Button
+                android:id="@+id/cancelSearchButton"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_below="@+id/startSearchingPassengerButton"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="30dp"
+                android:layout_marginEnd="0dp"
+                android:background="@drawable/circle_button"
+                android:text="Cancel" />
+
+            <Button
+                android:id="@+id/signOutTaxiButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="16dp"
+                android:layout_marginBottom="48dp"
+                android:background="@color/colorPrimary"
+                android:text="Sign Out" />
+
+            <ProgressBar
+                android:id="@+id/waitingProgressBar"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:visibility="gone"
+                android:layout_centerInParent="true" />
+        </RelativeLayout>
+
+    </FrameLayout>
+</layout>

@@ -4,15 +4,15 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
 import android.databinding.ObservableBoolean;
 
-import com.jonathan.taxidispatcher.api.APIClient;
 import com.jonathan.taxidispatcher.api.ApiResponse;
 import com.jonathan.taxidispatcher.data.TaxiRepository;
 import com.jonathan.taxidispatcher.data.model.StandardResponse;
+import com.jonathan.taxidispatcher.data.model.TaxiSignInResponse;
 import com.jonathan.taxidispatcher.data.model.Taxis;
 import com.jonathan.taxidispatcher.utils.SingleLiveEvent;
 
 public class DriverMainViewModel extends ViewModel {
-    private SingleLiveEvent<ApiResponse<StandardResponse>> signInResponse = new SingleLiveEvent<>();
+    private SingleLiveEvent<ApiResponse<TaxiSignInResponse>> signInResponse = new SingleLiveEvent<>();
     private SingleLiveEvent<ApiResponse<StandardResponse>> deleteAccountResponse = new SingleLiveEvent<>();
     private SingleLiveEvent<ApiResponse<StandardResponse>> registerAccountResponse = new SingleLiveEvent<>();
     public MutableLiveData<ApiResponse<Taxis>> taxiList = new MutableLiveData<>();
@@ -24,7 +24,7 @@ public class DriverMainViewModel extends ViewModel {
         this.taxiRepository = taxiRepository;
     }
 
-    public SingleLiveEvent<ApiResponse<StandardResponse>> taxiSignIn(String plateNumber, String password, Integer id) {
+    public SingleLiveEvent<ApiResponse<TaxiSignInResponse>> taxiSignIn(String plateNumber, String password, Integer id) {
         isLoading.set(true);
         taxiRepository.taxiLogIn(plateNumber, password, id, response -> {
             signInResponse.setValue(response);

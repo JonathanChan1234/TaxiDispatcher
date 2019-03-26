@@ -19,23 +19,28 @@ public class LogInViewModel extends ViewModel {
         this.userRepository = userRepository;
     }
 
-    public LiveData<ApiResponse<AccountUserResponse>> passengerLogIn(String phoneNumber, String password) {
-        userResponse = userRepository.passengerLogIn(phoneNumber, password);
+    public LiveData<ApiResponse<AccountUserResponse>> passengerLogIn(String phoneNumber, String password, String token) {
+        userResponse = userRepository.passengerLogIn(phoneNumber, password, token);
         return userResponse;
     }
 
-    public LiveData<ApiResponse<AccountDriverResponse>> driverLogIn(String phoneNumber, String password) {
-        driverResponse = userRepository.driverLogIn(phoneNumber, password);
+    public LiveData<ApiResponse<AccountDriverResponse>> driverLogIn(String phoneNumber, String password, String token) {
+        driverResponse = userRepository.driverLogIn(phoneNumber, password, token);
         return driverResponse;
     }
 
-    public LiveData<ApiResponse<AccountUserResponse>> passengerRegister(String username, String password, String phoneNumber, String email, String img) {
-        userResponse = userRepository.passengerRegister(username, password, phoneNumber, email, img);
+    public LiveData<ApiResponse<AccountUserResponse>> passengerRegister(String username,
+                                                                        String password,
+                                                                        String phoneNumber,
+                                                                        String email,
+                                                                        String img,
+                                                                        String token) {
+        userResponse = userRepository.passengerRegister(username, password, phoneNumber, email, img, token);
         return userResponse;
     }
 
-    public LiveData<ApiResponse<AccountDriverResponse>> driverRegister(String username, String phonenumber, String password, String email, String img) {
-        driverResponse = userRepository.driverRegister(username, phonenumber, password, email, img);
+    public LiveData<ApiResponse<AccountDriverResponse>> driverRegister(String username, String phonenumber, String password, String email, String img, String token) {
+        driverResponse = userRepository.driverRegister(username, phonenumber, password, email, img, token);
         return driverResponse;
     }
 }

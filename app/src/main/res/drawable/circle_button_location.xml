@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--  res/drawable/rounded_edittext.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="false">
+        <bitmap
+            android:src="@drawable/location_search"
+            android:gravity="center"/>
+        <color android:color="@color/colorPrimary"/>
+    </item>
+
+</selector>

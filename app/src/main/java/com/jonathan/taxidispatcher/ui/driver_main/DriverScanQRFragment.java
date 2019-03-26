@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +24,9 @@ import com.jonathan.taxidispatcher.R;
 import com.jonathan.taxidispatcher.databinding.FragmentDriverScanQrBinding;
 import com.jonathan.taxidispatcher.di.Injectable;
 import com.jonathan.taxidispatcher.factory.DriverMainViewModelFactory;
+import com.jonathan.taxidispatcher.room.TransactionDao;
 import com.jonathan.taxidispatcher.session.Session;
+import com.jonathan.taxidispatcher.ui.driver_transaction.DriverTransactionActivity;
 import com.jonathan.taxidispatcher.utils.PhotoUtils;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
@@ -40,6 +43,8 @@ public class DriverScanQRFragment extends Fragment implements Injectable {
 
     @Inject
     DriverMainViewModelFactory factory;
+    @Inject
+    TransactionDao dao;
     LayoutInflater inflater;
 
     public DriverScanQRFragment() {
@@ -85,23 +90,31 @@ public class DriverScanQRFragment extends Fragment implements Injectable {
     }
 
     private void signInTaxi(String token) {
-        if(token.length() < 34) {
+        if (token.length() < 34) {
             Toast.makeText(getContext(), "Invalid token", Toast.LENGTH_SHORT).show();
         } else {
             binding.progressBar.setVisibility(View.VISIBLE);
             viewModel.taxiSignIn(token.substring(32, token.length()), token.substring(0, 32), Session.getUserId(getContext()))
-            .observe(this, response-> {
-                binding.progressBar.setVisibility(View.GONE);
-                if(response.isSuccessful()) {
-                    if(response.body.success == 1) {
-                        Toast.makeText(getContext(), "Success", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), response.body.message, Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(getContext(), "Network connection issue", Toast.LENGTH_SHORT).show();
-                }
-            });
+                    .observe(this, response -> {
+                        binding.progressBar.setVisibility(View.GONE);
+                        if (response.isSuccessful()) {
+                            if (response.body.success == 1) {
+                                try {
+                                    Session.saveTaxiId(getContext(), Integer.parseInt(response.body.message));
+                                    Session.saveTaxiPlateNumber(getContext(), response.body.taxi.platenumber);
+                                    Intent intent = new Intent(getActivity(), DriverTransactionActivity.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+                                } catch (IllegalArgumentException e) {
+                                    Timber.e(e);
+                                }
+                            } else {
+                                Toast.makeText(getContext(), response.body.message, Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(getContext(), response.errorMessage, Toast.LENGTH_SHORT).show();
+                        }
+                    });
         }
     }
 
@@ -112,7 +125,7 @@ public class DriverScanQRFragment extends Fragment implements Injectable {
             if (result.getContents() == null) {
                 Toast.makeText(getActivity(), "Cancelled", Toast.LENGTH_SHORT).show();
             } else {
-               signInTaxi(result.getContents());
+                signInTaxi(result.getContents());
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -129,7 +142,7 @@ public class DriverScanQRFragment extends Fragment implements Injectable {
                 .setPositiveButton("Confirm", ((dialogInterface, i) -> {
                     EditText plateNumber = dialogView.findViewById(R.id.plateNumberText);
                     EditText password = dialogView.findViewById(R.id.passwordText);
-                    if(!TextUtils.isEmpty(plateNumber.getText().toString()) &&
+                    if (!TextUtils.isEmpty(plateNumber.getText().toString()) &&
                             !TextUtils.isEmpty(password.getText().toString())) {
                         binding.progressBar.setVisibility(View.VISIBLE);
                         viewModel.registerNewTaxi(Session.getUserId(getContext()),
@@ -137,8 +150,8 @@ public class DriverScanQRFragment extends Fragment implements Injectable {
                                 password.getText().toString())
                                 .observe(this, response -> {
                                     binding.progressBar.setVisibility(View.GONE);
-                                    if(response.isSuccessful()) {
-                                        if(response.body.success == 1) {
+                                    if (response.isSuccessful()) {
+                                        if (response.body.success == 1) {
                                             showQRCodeDialog(response.body.message, plateNumber.getText().toString());
                                         } else {
                                             Toast.makeText(getContext(), response.body.message, Toast.LENGTH_SHORT).show();
@@ -168,7 +181,7 @@ public class DriverScanQRFragment extends Fragment implements Injectable {
             imageView.setImageBitmap(bitmap);
             PhotoUtils.storeQRCodeImage(bitmap, plateNumber);
             alertDialog.show();
-        } catch(Exception e) {
+        } catch (Exception e) {
             Timber.e(e);
         }
     }
