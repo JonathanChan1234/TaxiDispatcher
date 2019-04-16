@@ -9,4 +9,9 @@
     <string name="notToIsland">不過海</string>
     <string name="make_call">Make Call</string>
 
+    <string-array name="type">
+        <item>Personal Ride</item>
+        <item>Share Ride</item>
+    </string-array>
+
 </resources>

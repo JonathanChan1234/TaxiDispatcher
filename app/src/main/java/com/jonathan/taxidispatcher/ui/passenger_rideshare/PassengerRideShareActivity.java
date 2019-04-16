@@ -18,6 +18,8 @@ import com.jonathan.taxidispatcher.di.Injectable;
 import com.jonathan.taxidispatcher.event.PassengerShareRideFound;
 import com.jonathan.taxidispatcher.factory.PassengerShareRideViewModelFactory;
 import com.jonathan.taxidispatcher.session.Session;
+import com.jonathan.taxidispatcher.ui.passenger_main.PassengerMainActivity;
+import com.jonathan.taxidispatcher.ui.passenger_transaction.PassengerCancelFragment;
 import com.jonathan.taxidispatcher.utils.Constants;
 import com.jonathan.taxidispatcher.utils.Utils;
 
@@ -51,6 +53,9 @@ public class PassengerRideShareActivity extends AppCompatActivity
             intent.setAction(Constants.ACTION.START_FOREGROUND_SERVICE);
             startService(intent);
         }
+        Intent intent = new Intent(this, PassengerShareRideSocketService.class);
+        intent.setAction(Constants.ACTION.START_FOREGROUND_SERVICE);
+        startService(intent);
         viewModel = ViewModelProviders.of(this, factory).get(PassengerRideShareViewModel.class);
         manager = getSupportFragmentManager();
     }
@@ -72,6 +77,10 @@ public class PassengerRideShareActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         EventBus.getDefault().register(this);
+        updateStatus();
+    }
+
+    private void updateStatus() {
         viewModel.setCurrentTransactionStatus(Session.getShareRideId(this));
         // Update the status of the page
         viewModel.getCurrentTransactionStatus().observe(this, new Observer<ApiResponse<RideShareResource>>() {
@@ -79,6 +88,7 @@ public class PassengerRideShareActivity extends AppCompatActivity
             public void onChanged(@Nullable ApiResponse<RideShareResource> rideShareResourceApiResponse) {
                 if (rideShareResourceApiResponse.isSuccessful()) {
                     viewModel.setRideShare(rideShareResourceApiResponse.body.data);
+                    //TODO:add cancel case
                     switch (rideShareResourceApiResponse.body.data.status) {
                         case 100:
                             changeFragment(PassengerRideShareWaitingFragment.newInstance(), true);
@@ -92,6 +102,9 @@ public class PassengerRideShareActivity extends AppCompatActivity
                                 public void onChanged(@Nullable ApiResponse<RideSharePairingResponse> response) {
                                     if(response.isSuccessful()) {
                                         if(response.body.success == 1) {
+                                            if(response.body.rideShare.status == 400) {
+                                                changeFragment(PassengerCancelFragment.newInstance(),false);
+                                            }
                                             requestDriverLocation(response.body.rideShare.driver.id);
                                             viewModel.setRideShareTranscation(response.body.rideShare);
                                             changeFragment(PassengerStartShareRideFragment.newInstance(), true);
@@ -100,7 +113,11 @@ public class PassengerRideShareActivity extends AppCompatActivity
                                 }
                             });
                             break;
+                        case 400:
+                            toMainPage();
+                            break;
                         default:
+                            toMainPage();
                             break;
                     }
                 } else {
@@ -108,6 +125,12 @@ public class PassengerRideShareActivity extends AppCompatActivity
                 }
             }
         });
+    }
+
+    private void toMainPage() {
+        Intent intent = new Intent(this, PassengerMainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     private void requestDriverLocation(int id) {
@@ -127,6 +150,11 @@ public class PassengerRideShareActivity extends AppCompatActivity
     public void onShareRideFound(PassengerShareRideFound event) {
         viewModel.setRideShareTranscation(event.transaction);
         changeFragment(PassengerStartShareRideFragment.newInstance(), true);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onStatusUpdate(Integer integer) {
+        updateStatus();
     }
 
     @Override

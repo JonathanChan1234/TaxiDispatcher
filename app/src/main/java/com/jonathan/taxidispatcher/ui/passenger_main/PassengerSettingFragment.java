@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 
 import com.jonathan.taxidispatcher.R;
 import com.jonathan.taxidispatcher.databinding.FragmentPassengerSettingBinding;
+import com.jonathan.taxidispatcher.session.Session;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,5 +49,8 @@ public class PassengerSettingFragment extends Fragment {
 
         }));
         binding.settingListView.setAdapter(adapter);
+        binding.setIPButton.setOnClickListener(view -> {
+            Session.setIP(getContext(), binding.ipText.getText().toString());
+        });
     }
 }

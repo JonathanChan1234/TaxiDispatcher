@@ -47,106 +47,97 @@
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
                     android:gravity="center"
-                    android:text="From Palm Street \t To \t HKU"
-                    android:textColor="#000000"
-                    android:textSize="16sp"
+                    android:text="From Palm Street To HKU"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/timeCounterText"
+                <RelativeLayout
+                    android:id="@+id/timeCounterBlock"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/routeText"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"
-                    android:gravity="center"
-                    android:textColor="#FF0000"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:layout_height="30dp"
+                    android:layout_below="@+id/routeText">
+
+                    <TextView
+                        android:id="@+id/timeCounterText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:textColor="#000000"
+                        android:textSize="16sp"
+                        android:text=" "/>
+                </RelativeLayout>
+
 
                 <LinearLayout
                     android:id="@+id/passengerInfoGroup"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/timeCounterText"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_below="@id/timeCounterBlock"
                     android:layout_centerHorizontal="true"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:background="#33ffbb">
 
-                    <ImageView
-                        android:id="@+id/passengerProfileImg"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:padding="10dp" />
-
-                    <LinearLayout
+                    <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Your Passenger"
+                        android:textColor="#000000"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_gravity="center"/>
+
+                    <TextView
+                        android:id="@+id/passengerUsernameText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                        android:text="Name:"
+                        android:textColor="#000000"
+                        android:textSize="14sp" />
 
-                        <TextView
-                            android:id="@+id/passengerUsernameText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Username: Chan Tai Man"
-                            android:textColor="#000000"
-                            android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/phoneNumberText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Phone Numbger:"
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:layout_gravity="center"/>
 
-                        <TextView
-                            android:id="@+id/phoneNumberText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Plate Number: TY5902"
-                            android:textColor="#000000"
-                            android:textSize="14sp" />
-                    </LinearLayout>
                 </LinearLayout>
 
 
                 <LinearLayout
                     android:id="@+id/buttonGroup"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/passengerInfoGroup"
                     android:orientation="horizontal">
 
-                    <RelativeLayout
+                    <Button
+                        android:id="@+id/callPassengerButton"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_marginEnd="5dp"
-                        android:layout_weight="1">
+                        android:layout_margin="5dp"
+                        android:layout_weight="1"
+                        android:background="#ffcc00"
+                        android:drawableStart="@drawable/ic_phone_black_24dp"
+                        android:gravity="center"
+                        android:text="Call Your Passenger" />
 
-                        <Button
-                            android:id="@+id/callPassengerButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="5dp"
-                            android:background="#ffcc00"
-                            android:drawableStart="@drawable/ic_phone_black_24dp"
-                            android:gravity="center"
-                            android:text="Call Your Passenger" />
-                    </RelativeLayout>
-
-                    <RelativeLayout
+                    <Button
+                        android:id="@+id/reachPickupPointButton"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_weight="1">
+                        android:layout_centerHorizontal="true"
+                        android:layout_margin="5dp"
+                        android:layout_weight="1"
+                        android:background="#ff704d"
+                        android:drawableStart="@drawable/ic_ride_24px"
+                        android:gravity="center"
+                        android:text="Reach the Pick-up Point" />
 
-                        <Button
-                            android:id="@+id/reachPickupPointButton"
-                            android:layout_width="200dp"
-                            android:layout_height="wrap_content"
-                            android:layout_centerHorizontal="true"
-                            android:layout_margin="5dp"
-                            android:background="#ff704d"
-                            android:drawableStart="@drawable/ic_ride_24px"
-                            android:gravity="center"
-                            android:text="Reach the Pick-up Point" />
-
-                    </RelativeLayout>
                 </LinearLayout>
 
                 <LinearLayout
@@ -155,29 +146,29 @@
                     android:layout_below="@+id/buttonGroup"
                     android:orientation="horizontal">
 
-                        <Button
-                            style="?android:attr/button"
-                            android:id="@+id/exitButton"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:layout_margin="5dp"
-                            android:background="#ff0066"
-                            android:drawableStart="@drawable/ic_cancel_24dp"
-                            android:gravity="center"
-                            android:text="Exit" />
+                    <Button
+                        android:id="@+id/exitButton"
+                        style="?android:attr/button"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_margin="5dp"
+                        android:layout_weight="1"
+                        android:background="#ff0066"
+                        android:drawableStart="@drawable/ic_cancel_24dp"
+                        android:gravity="center"
+                        android:text="Exit" />
 
-                        <Button
-                            style="?android:attr/button"
-                            android:id="@+id/finishButton"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:layout_margin="5dp"
-                            android:background="#0099ff"
-                            android:drawableStart="@drawable/ic_order_24px"
-                            android:gravity="center"
-                            android:text="Finish Ride" />
+                    <Button
+                        android:id="@+id/finishButton"
+                        style="?android:attr/button"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_margin="5dp"
+                        android:layout_weight="1"
+                        android:background="#0099ff"
+                        android:drawableStart="@drawable/ic_order_24px"
+                        android:gravity="center"
+                        android:text="Finish Ride" />
 
                 </LinearLayout>
 

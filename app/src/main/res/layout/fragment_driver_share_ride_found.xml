@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
     <RelativeLayout
@@ -9,22 +8,22 @@
 
         <TextView
             android:id="@+id/titleText"
-            android:layout_alignParentTop="true"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:drawableStart="@drawable/ic_order_24px"
-            android:text="Share Ride Order"
-            android:textStyle="bold"
-            android:gravity="center_vertical"
-            android:textColor="#FFFFFF"
+            android:layout_alignParentTop="true"
             android:background="@color/colorPrimary"
-            android:textSize="20sp" />
+            android:drawableStart="@drawable/ic_order_24px"
+            android:gravity="center_vertical"
+            android:text="Share Ride Order"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <LinearLayout
-            android:layout_below="@+id/titleText"
             android:id="@+id/passengerAInfoGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_below="@+id/titleText"
             android:layout_alignParentStart="true"
             android:orientation="vertical">
 
@@ -37,7 +36,7 @@
                 android:gravity="center_vertical"
                 android:text="Passenger Group A"
                 android:textColor="@color/black"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TableLayout
@@ -57,19 +56,19 @@
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/firstIdText"
                         android:layout_width="match_parent"
-                        android:layout_weight="3"
+                        android:layout_weight="2"
                         android:width="0dp"
                         android:background="@drawable/cell_shape_blue"
                         android:padding="8dp"
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
                 </TableRow>
 
                 <TableRow
@@ -86,49 +85,19 @@
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/firstRouteText"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_weight="3"
+                        android:layout_weight="2"
                         android:background="@drawable/cell_shape_blue"
                         android:padding="8dp"
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
-                </TableRow>
-
-
-                <TableRow
-                    android:layout_width="match_parent"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/cell_shape_blue"
-                        android:padding="8dp"
-                        android:text="Requirement"
-                        android:textAllCaps="true"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textColor="@color/white"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/firstRequirementText"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="3"
-                        android:background="@drawable/cell_shape_blue"
-                        android:padding="8dp"
-                        android:textAllCaps="true"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
                 </TableRow>
 
             </TableLayout>
@@ -143,7 +112,7 @@
                 android:gravity="center_vertical"
                 android:text="Passenger Group B"
                 android:textColor="@color/black"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TableLayout
@@ -164,20 +133,19 @@
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/secondIdText"
+                        android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_width="match_parent"
-                        android:layout_weight="3"
-                        android:width="0dp"
+                        android:layout_weight="2"
                         android:background="@drawable/cell_shape_red"
                         android:padding="8dp"
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
                 </TableRow>
 
                 <TableRow
@@ -194,22 +162,22 @@
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/secondRouteText"
                         android:layout_width="0dp"
-                        android:layout_weight="3"
+                        android:layout_weight="2"
                         android:background="@drawable/cell_shape_red"
                         android:padding="8dp"
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
                 </TableRow>
 
-
                 <TableRow
+                    android:layout_marginTop="5dp"
                     android:layout_width="match_parent"
                     android:orientation="horizontal">
 
@@ -217,66 +185,95 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:background="@drawable/cell_shape_red"
+                        android:background="@drawable/cell_shape_green"
                         android:padding="8dp"
-                        android:text="Requirement"
+                        android:text="Time/Distance"
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
 
                     <TextView
-                        android:id="@+id/secondRequirementText"
+                        android:id="@+id/timeDistanceText"
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="3"
-                        android:background="@drawable/cell_shape_red"
+                        android:layout_weight="2"
+                        android:background="@drawable/cell_shape_green"
                         android:padding="8dp"
                         android:textAllCaps="true"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
                 </TableRow>
 
             </TableLayout>
 
 
-            <TextView
-                android:id="@+id/timerText"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:text="Please respond within "
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:layout_height="match_parent">
+
+                <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:id="@+id/routeMap"
+                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    tools:context=".ui.driver_transaction.DriverTransactionActivity" />
+
+                <Button
+                    android:id="@+id/toDestinationButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_gravity="center"
+                    android:background="@drawable/round_button"
+                    android:text="To Destination" />
+
+                <TextView
+                    android:id="@+id/timeCounterText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="10dp"
+                    android:background="@color/theme_blue"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+            </RelativeLayout>
         </LinearLayout>
 
-        <TableLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:stretchColumns="*">
+            android:orientation="horizontal">
 
-            <TableRow>
+            <Button
+                android:id="@+id/acceptButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:background="#0059B3"
+                android:text="Accept" />
 
-                <Button
-                    android:id="@+id/acceptButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/round_button"
-                    android:text="Accept" />
+            <Button
+                android:id="@+id/rejectButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:text="Reject" />
 
-                <Button
-                    android:id="@+id/rejectButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/round_button"
-                    android:text="Reject" />
-            </TableRow>
+        </LinearLayout>
 
-        </TableLayout>
+        <ProgressBar
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:id="@+id/processingBar"
+            android:layout_centerInParent="true"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/warningText"

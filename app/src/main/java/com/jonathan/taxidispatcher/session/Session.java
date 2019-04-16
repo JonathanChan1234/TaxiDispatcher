@@ -19,10 +19,21 @@ public class Session {
     public static final String TAXI = "TAXI";
     public static final String TAXI_NAME = "taxi name";
     public static final String SHARE_RIDE_ID = "shareRideId";
+    public static final String IP = "IP";
 
 
     private static SharedPreferences getPreferences(Context context) {
         return context.getSharedPreferences("Preference", Context.MODE_PRIVATE);
+    }
+
+    public static void setIP(Context context, String ip) {
+        SharedPreferences.Editor editor = getPreferences(context).edit();
+        editor.putString(IP, ip);
+        editor.apply();
+    }
+
+    public static String getIP(Context context) {
+        return getPreferences(context).getString(IP, "");
     }
 
     public static void logIn(Context context,

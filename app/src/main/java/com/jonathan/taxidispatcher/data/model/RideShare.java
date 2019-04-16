@@ -1,5 +1,7 @@
 package com.jonathan.taxidispatcher.data.model;
 
+import android.arch.persistence.room.Embedded;
+import android.arch.persistence.room.Ignore;
 import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
@@ -11,6 +13,7 @@ public class RideShare {
     public Integer id;
     @SerializedName("user")
     @Expose
+    @Ignore
     public User user;
     @SerializedName("rideshare_id")
     @Expose
@@ -38,12 +41,18 @@ public class RideShare {
     public Integer status;
     @SerializedName("created_at")
     @Expose
+    @Ignore
     public String createdAt;
     @SerializedName("updated_at")
     @Expose
+    @Ignore
     public String updatedAt;
     @SerializedName("driverReachTime")
     @Expose
     @Nullable
     public String driverReachTime;
+    @SerializedName("cancelled")
+    @Expose
+    public Integer cancelled;
+
 }

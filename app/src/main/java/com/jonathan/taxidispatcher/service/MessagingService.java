@@ -1,5 +1,6 @@
 package com.jonathan.taxidispatcher.service;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
@@ -24,7 +25,8 @@ import java.util.Map;
 public class MessagingService extends FirebaseMessagingService {
     public static final String TAG = "messaging service";
     NotificationManager nm;
-    NotificationCompat.Builder notificationBuilder;
+    Notification.Builder notificationBuilder;
+    NotificationCompat.Builder notificationBuilder8;
 
     @Override
     public void onNewToken(String token) {
@@ -119,20 +121,29 @@ public class MessagingService extends FirebaseMessagingService {
     private void initNotification() {
         PassengerNotificationChannel.createNotificationChannel(this);
         nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationBuilder = new NotificationCompat.Builder(this, PassengerNotificationChannel.CHANNEL_ID)
-                .setContentTitle("Messenger")
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setOngoing(false);
         if (Build.VERSION.SDK_INT <= 25) { //API <= 25 (Android 7.1 or older)
-            notificationBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
+            notificationBuilder = new Notification.Builder(this)
+                    .setContentTitle("Taxi GoGo: You have got a new notification")
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setOngoing(false);
+            notificationBuilder.setPriority(Notification.PRIORITY_HIGH);
         } else {    //API > 25 (Android 8 or higher)
-            notificationBuilder.setPriority(NotificationManagerCompat.IMPORTANCE_HIGH);
+            notificationBuilder8 = new NotificationCompat.Builder(this, PassengerNotificationChannel.CHANNEL_ID)
+                    .setContentTitle("Taxi GoGo: You have got a new notification")
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setOngoing(false);
+            notificationBuilder8.setPriority(NotificationManagerCompat.IMPORTANCE_HIGH);
         }
     }
 
     private void notifyUser(String message, String sender) {
-        notificationBuilder.setContentText(sender + ": " + message);
-        nm.notify(1, notificationBuilder.build());
+        if(Build.VERSION.SDK_INT <= 25) {
+            notificationBuilder.setContentText(sender + ": " + message);
+            nm.notify(1, notificationBuilder.build());
+        } else {
+            notificationBuilder8.setContentText(sender + ": " + message);
+            nm.notify(1, notificationBuilder8.build());
+        }
     }
 
     private void timerNotifyUser(String message) {
@@ -142,5 +153,6 @@ public class MessagingService extends FirebaseMessagingService {
     }
 
     private void scheduleJob() {
+
     }
 }

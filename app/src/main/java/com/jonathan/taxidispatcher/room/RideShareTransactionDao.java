@@ -13,8 +13,8 @@ import java.util.List;
 @Dao
 public abstract class RideShareTransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public abstract void insertTransaction(List<RideShareTransaction> transcations);
+    public abstract void insertRideShareTransaction(List<RideShareTransaction> transactions);
 
     @Query("SELECT * FROM RideShareTransaction")
-    public abstract LiveData<List<RideShareTransaction>> loadTransactionHistory();
+    public abstract LiveData<List<RideShareTransaction>> loadRideShareHistory();
 }

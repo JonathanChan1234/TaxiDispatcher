@@ -12,6 +12,7 @@
             android:layout_height="match_parent"
             android:background="#333333">
 
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -228,14 +229,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/round_button"
-                        android:text="Accept" />
+                        android:text="Confirm" />
 
                     <Button
                         android:id="@+id/rejectDriverButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/round_button"
-                        android:text="Reject" />
+                        android:text="Cancel" />
                 </TableRow>
 
             </TableLayout>
@@ -251,6 +252,14 @@
                 android:layout_centerHorizontal="true"
                 android:layout_centerInParent="true"
                 android:background="@color/backgroundBlue"/>
+
+            <ProgressBar
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:id="@+id/processingBar"
+                android:visibility="gone"
+                android:layout_centerInParent="true"/>
+
         </RelativeLayout>
 
     </FrameLayout>

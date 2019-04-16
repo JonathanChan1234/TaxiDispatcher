@@ -9,6 +9,7 @@ import com.jonathan.taxidispatcher.room.RideShareTransactionDao;
 import com.jonathan.taxidispatcher.room.TaxiDb;
 import com.jonathan.taxidispatcher.room.TransactionDao;
 import com.jonathan.taxidispatcher.service.DriverSyncAdapter;
+import com.jonathan.taxidispatcher.session.Session;
 
 import java.util.concurrent.TimeUnit;
 
@@ -55,9 +56,9 @@ public class AppModule {
 
     @Provides
     @Singleton
-    APIInterface provideAPIService(OkHttpClient client) {
+    APIInterface provideAPIService(OkHttpClient client, TaxiApp app) {
         return new Retrofit.Builder()
-                .baseUrl("http://192.168.86.183:8000/api/")
+                .baseUrl("http://10.64.197.239:8000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build()
@@ -77,13 +78,13 @@ public class AppModule {
         return db.transactionDao();
     }
 
-//    @Provides
-//    @Singleton
-//    RideShareTransactionDao provideRideShareTransactionDao(TaxiDb db) {
-//        return db.rideShareTransactionDao();
-//    }
-//
-//    @Provides
+    @Provides
+    @Singleton
+    RideShareTransactionDao provideRideShareTransactionDao(TaxiDb db) {
+        return db.rideShareTransactionDao();
+    }
+
+//    @Providesl
 //    @Singleton
 //    DriverDao provideDriverDao(TaxiDb db) {
 //        return db.driverDao();

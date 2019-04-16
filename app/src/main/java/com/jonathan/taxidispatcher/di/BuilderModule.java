@@ -4,6 +4,7 @@ import com.jonathan.taxidispatcher.service.DriverSocketService;
 import com.jonathan.taxidispatcher.service.PassengerSocketService;
 import com.jonathan.taxidispatcher.ui.driver_main.DriverMainActivity;
 import com.jonathan.taxidispatcher.ui.driver_main.DriverManageTaxiFragment;
+import com.jonathan.taxidispatcher.ui.driver_main.DriverOrderFragment;
 import com.jonathan.taxidispatcher.ui.driver_main.DriverScanQRFragment;
 import com.jonathan.taxidispatcher.ui.driver_transaction.DriverPassengerFoundFragment;
 import com.jonathan.taxidispatcher.ui.driver_transaction.DriverShareRideFoundFragment;
@@ -24,11 +25,12 @@ import com.jonathan.taxidispatcher.ui.passenger_transaction.PassengerDriverConne
 import com.jonathan.taxidispatcher.ui.passenger_transaction.PassengerDriverFoundFragment;
 import com.jonathan.taxidispatcher.ui.passenger_transaction.PassengerTransactionActivity;
 import com.jonathan.taxidispatcher.ui.passenger_transaction.PassengerWaitingFragment;
+import com.jonathan.taxidispatcher.ui.passenger_transaction.RatingActivity;
+import com.jonathan.taxidispatcher.ui.driver_transaction.TransactionCancelFragment;
 import com.jonathan.taxidispatcher.ui.start_main.CreateAccountFragment;
 import com.jonathan.taxidispatcher.ui.start_main.MainFragment;
 import com.jonathan.taxidispatcher.ui.start_main.StartActivity;
 
-import org.checkerframework.checker.units.qual.C;
 
 import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
@@ -65,6 +67,9 @@ public abstract class BuilderModule {
     @ContributesAndroidInjector
     abstract DriverManageTaxiFragment confirmDriverManageTaxiFragment();
 
+    @ContributesAndroidInjector
+    abstract DriverOrderFragment confirmDriverOrderFragment();
+
     //Passenger Transaction
     @ContributesAndroidInjector
     abstract PassengerTransactionActivity contributePassengerTransactionActivity();
@@ -100,6 +105,9 @@ public abstract class BuilderModule {
     @ContributesAndroidInjector
     abstract DriverStartShareRideFragment contributeDriverStartShareRideFragment();
 
+    @ContributesAndroidInjector
+    abstract TransactionCancelFragment contributeTransactionCancelFragment();
+
     // Service
     @ContributesAndroidInjector
     abstract PassengerSocketService contributePassengerSocketService();
@@ -122,4 +130,8 @@ public abstract class BuilderModule {
 
     @ContributesAndroidInjector
     abstract PassengerStartShareRideFragment contributePassengerStartShareRideFragment();
+
+    //Rating Activity
+    @ContributesAndroidInjector
+    abstract RatingActivity contributeRatingActivity();
 }

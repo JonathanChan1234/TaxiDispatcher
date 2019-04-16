@@ -11,4 +11,5 @@
     <color name="lightBlue">#0099ff</color>
     <color name="theme_blue">#0059B3</color>
     <color name="theme_black">#333333</color>
+    <color name="red">#FF0000</color>
 </resources>

@@ -7,24 +7,25 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.jonathan.taxidispatcher.R;
+import com.jonathan.taxidispatcher.api.APIInterface;
 import com.jonathan.taxidispatcher.data.model.Driver;
 import com.jonathan.taxidispatcher.data.model.DriverFoundResponse;
-import com.jonathan.taxidispatcher.data.model.DriverLocation;
+import com.jonathan.taxidispatcher.data.model.StandardResponse;
 import com.jonathan.taxidispatcher.data.model.Transcation;
 import com.jonathan.taxidispatcher.event.DriverFoundEvent;
+import com.jonathan.taxidispatcher.event.DriverReachTimerEvent;
 import com.jonathan.taxidispatcher.event.DriverResponseEvent;
-import com.jonathan.taxidispatcher.event.LocationUpdateEvent;
+import com.jonathan.taxidispatcher.event.Location;
 import com.jonathan.taxidispatcher.event.PassengerDriverReachEvent;
-import com.jonathan.taxidispatcher.event.PassengerShareRideFound;
 import com.jonathan.taxidispatcher.event.TimerEvent;
-import com.jonathan.taxidispatcher.room.TaxiDb;
-import com.jonathan.taxidispatcher.room.TransactionDao;
 import com.jonathan.taxidispatcher.session.Session;
 import com.jonathan.taxidispatcher.ui.passenger_transaction.PassengerTransactionActivity;
 import com.jonathan.taxidispatcher.utils.Constants;
@@ -39,7 +40,6 @@ import org.json.JSONObject;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Timer;
@@ -47,9 +47,13 @@ import java.util.Timer;
 import javax.inject.Inject;
 
 import dagger.android.AndroidInjection;
+import io.socket.client.Ack;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import timber.log.Timber;
 
 public class PassengerSocketService extends Service {
@@ -62,6 +66,9 @@ public class PassengerSocketService extends Service {
     public static final String DRIVER_FOUND = "passengerDriverFound";
     public static final String DRIVER_REACH = "passengerDriverReach";
     public static final String EVENT_ACK = "eventAck";
+    public static final String STOP_TIMER = "stopTimer";
+    public static final String GET_DRIVER_LOCATION = "getDriverLocation";
+    public static final String STOP_GET_DRIVER_LOCATION = "stopGetDriverLocation";
 
     private Socket mSocket;
     private boolean isConnected;
@@ -73,11 +80,14 @@ public class PassengerSocketService extends Service {
     Notification.Builder notificationBuilder;
     int transcationid = 0;
 
-    @Inject
-    TransactionDao transactionDao;
-
     boolean isTimerThreadStarted = false;
     private boolean driverReachTimerThreadStarted = false;
+
+    Runnable updateLocationRunnable;
+    Handler handler;
+
+    @Inject
+    APIInterface apiService;
 
     public PassengerSocketService() {
     }
@@ -97,15 +107,32 @@ public class PassengerSocketService extends Service {
         foregroundServiceStart();
         transcationid = Session.getCurrentTransactionID(this);
         Log.d("PassengerSocketService", "started");
-        if (intent.getAction() != null) {
-            if (intent.getAction().equals(Constants.ACTION.START_FOREGROUND_SERVICE)) {
-                initHttpSocket();
-            } else if (intent.getAction().equals(Constants.ACTION.STOP_FOREGROUND_SERVICE)) {
-                stopForeground(true);
-                stopSelf();
+        if(intent != null) {
+            if (intent.getAction() != null) {
+                switch (intent.getAction()) {
+                    case Constants.ACTION.START_FOREGROUND_SERVICE:
+                        initHttpSocket();
+                        break;
+                    case Constants.ACTION.STOP_FOREGROUND_SERVICE:
+                        stopForeground(true);
+                        stopSelf();
+                        break;
+                    case GET_DRIVER_LOCATION:
+                        int driverId = intent.getIntExtra("driverId", 0);
+                        getDriverPosition(driverId);
+                        break;
+                    case STOP_GET_DRIVER_LOCATION:
+                        if (handler != null && updateLocationRunnable != null)
+                            handler.removeCallbacks(updateLocationRunnable);
+                        break;
+                    case STOP_TIMER:
+                        driverReachTimerThreadStarted = false;
+                        isTimerThreadStarted = false;
+                        break;
+                }
             }
         }
-        return START_REDELIVER_INTENT; //START_STICKY: resume the service right (without the intent parameter) after it is killed
+        return START_STICKY; //START_STICKY: resume the service right (without the intent parameter) after it is killed
     }
 
     private void initHttpSocket() {
@@ -113,7 +140,7 @@ public class PassengerSocketService extends Service {
             IO.Options opts = new IO.Options();
             opts.timeout = -1;
             opts.reconnection = true;
-            mSocket = IO.socket("http://192.168.86.183:3000", opts);
+            mSocket = IO.socket("http://" + Session.getIP(this) + ":3000", opts);
             connectSocket();
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -122,7 +149,7 @@ public class PassengerSocketService extends Service {
 
     private void connectSocket() {
         try {
-            mSocket.connect();
+            if(!isConnected) mSocket.connect();
             JSONObject object = new JSONObject();
             object.put("identity", "passenger");
             object.put("id", Session.getUserId(this));
@@ -140,7 +167,6 @@ public class PassengerSocketService extends Service {
         mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
         mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onTimeout);
         mSocket.on(DRIVER_FOUND, driverFound);
-        mSocket.on(LOCATION_UPDATE, locationUpdateFromDriver);
         mSocket.on(DRIVER_REACH, driverReachHandler);
     }
 
@@ -151,7 +177,6 @@ public class PassengerSocketService extends Service {
         mSocket.off(Socket.EVENT_CONNECT_ERROR, onConnectError);
         mSocket.off(Socket.EVENT_CONNECT_TIMEOUT, onTimeout);
         mSocket.off(DRIVER_FOUND, driverFound);
-        mSocket.off(LOCATION_UPDATE, locationUpdateFromDriver);
         mSocket.on(DRIVER_REACH, driverReachHandler);
     }
 
@@ -190,117 +215,72 @@ public class PassengerSocketService extends Service {
                     DRIVER_FOUND);
             //Convert the JSON object to POJO
             Gson gson = new Gson();
-            DriverFoundResponse response = gson.fromJson(data.toString(), DriverFoundResponse.class);
-//            transactionDao.updateTransactionStatus(101, response.driver.id, response.driver.phonenumber, response.driver.username,
-//                    response.driver.email, Session.getCurrentTransactionID(getApplicationContext()));
-            //Fire the event
-            EventBus.getDefault().postSticky(new DriverFoundEvent(response.transcation, response.driver));
-
-            //Start the timer
-            startTimer(180);
-        }
-    };
-
-    private void startTimer(int count) {
-        if (!isTimerThreadStarted) {
-            isTimerThreadStarted = true;
-            Thread timerThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        int counter = count;
-                        while (counter > 0 && isTimerThreadStarted) {
-                            Thread.sleep(1000);
-                            counter--;
-                            int minute = (counter % 3600) / 60;
-                            int second = (counter % 60);
-                            Log.i("Timer", minute + ":" + second);
-                            EventBus.getDefault().post(new TimerEvent(minute, second));
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            timerThread.start();
-        }
-    }
-
-    public Emitter.Listener driverReachHandler = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            JSONObject data = (JSONObject) args[0];
             try {
+                Transcation transcation = gson.fromJson(data.getJSONObject("transcation").toString(), Transcation.class);
+                Driver driver = gson.fromJson(data.getJSONObject("driver").toString(), Driver.class);
                 String time = data.getString("time");
-                JSONObject transcationData = data.getJSONObject("transcation");
-                Gson gson = new Gson();
-                Transcation transcation = gson.fromJson(transcationData.toString(), Transcation.class);
-                eventAck("transcation:" + transcation.id, DRIVER_REACH);
-                // Update the UI
-                EventBus.getDefault().post(new PassengerDriverReachEvent(time));
-                notifyUser("Your driver have already reached the pick-up point");
-                startNotificationTimer(time);
-            } catch (JSONException e) {
-                Timber.e(e);
+                //Fire the event
+                EventBus.getDefault().post(new DriverFoundEvent(transcation, driver));
+
+                startTimer(90, time, transcation.id, driver.id);
+            } catch(JSONException e) {
+                e.printStackTrace();
+                Log.d("Parsing error", e.getMessage());
             }
         }
     };
 
-    private void startNotificationTimer(String time) {
-        Calendar timeoutTime = Calendar.getInstance();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("ENG"));
-        try {
-            timeoutTime.setTime(format.parse(time));
-            timeoutTime.add(Calendar.MINUTE, 15);
-            timeoutTime.getTime().getTime();
-            Calendar calendar = Calendar.getInstance();
-            int timeDifference = (int) (timeoutTime.getTime().getTime() - calendar.getTime().getTime());
-            driverReachTimerThreadStarted = true;
-            Thread timerThread = new Thread(() -> {
-                try {
-                    int count = timeDifference / 1000;
-                    while (count > 0 && driverReachTimerThreadStarted) {
-                        Thread.sleep(1000);
-                        count--;
-                        int minute = (count % 3600) / 60;
-                        int second = (count % 60);
-                        //Update the notification bar
-                        notifyUserTimer("Your driver have already reached the pick-up point \n" +
-                                "Timeout Time: " + String.format("%02d", minute) +
-                                ":" + String.format("%02d", second));
-                        // Update the UI
-                        EventBus.getDefault().post(new TimerEvent(minute, second));
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-            timerThread.start();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Emitter.Listener locationUpdateFromDriver = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            JSONObject locationData = (JSONObject) args[0];
-            Log.i("Location data", locationData.toString());
-            Gson gson = new Gson();
-            DriverLocation location = gson.fromJson(locationData.toString(), DriverLocation.class);
-            EventBus.getDefault().post(location);
-        }
-    };
-
-    private void eventAck(String key, String event) {
-        if (mSocket != null) {
+    private void startTimer(int timeCount, String timeout, int transcationid, int driverid) {
+        if (!isTimerThreadStarted) {
+            isTimerThreadStarted = true;
+            Calendar timeoutTime = Calendar.getInstance();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("ENG"));
             try {
-                JSONObject object = new JSONObject();
-                object.put("event", event);
-                object.put("key", key);
-                mSocket.emit(EVENT_ACK, object);
-            } catch (JSONException e) {
-                Timber.e(e);
+                timeoutTime.setTime(format.parse(timeout));
+                timeoutTime.add(Calendar.SECOND, timeCount);
+                timeoutTime.getTime().getTime();
+                Calendar calendar = Calendar.getInstance();
+                int timeDifference = (int) (timeoutTime.getTime().getTime() - calendar.getTime().getTime());
+                Thread timerThread = new Thread(() -> {
+                    try {
+                        int count = timeDifference / 1000;
+                        while (count > 0 && isTimerThreadStarted) {
+                            Thread.sleep(1000);
+                            count--;
+                            int minute = (count % 3600) / 60;
+                            int second = (count % 60);
+
+                            //Update the notification bar
+                            notifyUserTimer("Please answer witn \n" +
+                                    String.format("%02d", minute) +
+                                    ":" + String.format("%02d", second));
+
+                            // Update the UI
+                            EventBus.getDefault().post(new TimerEvent(minute, second));
+                        }
+
+                        if(count == 0) {
+                            Thread.sleep(5000);
+                            try {
+                                JSONObject response = new JSONObject();
+                                response.put("transcation", transcationid);
+                                response.put("driver", driverid);
+                                response.put("response", 0);
+                                mSocket.emit("driverFoundResponse", response);
+                            } catch(JSONException e) {
+                                e.printStackTrace();
+                                Log.d("Parsing error", e.getMessage());
+                            }
+                        }
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                });
+                timerThread.start();
+            } catch (ParseException e) {
+                e.printStackTrace();
+                Log.d("Parsing error", e.getMessage());
             }
         }
     }
@@ -329,11 +309,118 @@ public class PassengerSocketService extends Service {
         }
     }
 
+    public Emitter.Listener driverReachHandler = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            JSONObject data = (JSONObject) args[0];
+            try {
+                String time = data.getString("time");
+                JSONObject transcationData = data.getJSONObject("transcation");
+                Gson gson = new Gson();
+                Transcation transcation = gson.fromJson(transcationData.toString(), Transcation.class);
+                eventAck("transcation:" + transcation.id, DRIVER_REACH);
+                // Update the UI
+                EventBus.getDefault().post(new PassengerDriverReachEvent(time));
+                notifyUser("Your driver have already reached the pick-up point");
+                startNotificationTimer(time);
+            } catch (JSONException e) {
+                Timber.e(e);
+            }
+        }
+    };
+
+    private void startNotificationTimer(String time) {
+        Calendar timeoutTime = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("ENG"));
+        try {
+            timeoutTime.setTime(format.parse(time));
+            timeoutTime.add(Calendar.MINUTE, 5);
+            timeoutTime.getTime().getTime();
+            Calendar calendar = Calendar.getInstance();
+            int timeDifference = (int) (timeoutTime.getTime().getTime() - calendar.getTime().getTime());
+            driverReachTimerThreadStarted = true;
+            Thread timerThread = new Thread(() -> {
+                try {
+                    int count = timeDifference / 1000;
+                    while (count > 0 && driverReachTimerThreadStarted) {
+                        Thread.sleep(1000);
+                        count--;
+                        int minute = (count % 3600) / 60;
+                        int second = (count % 60);
+
+                        //Update the notification bar
+                        notifyUserTimer("Your driver have already reached the pick-up point \n" +
+                                "Timeout Time: " + String.format("%02d", minute) +
+                                ":" + String.format("%02d", second));
+
+                        // Update the UI
+                        EventBus.getDefault().post(new DriverReachTimerEvent(minute, second));
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+            timerThread.start();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getDriverPosition(int id) {
+        if(handler == null) handler = new Handler(Looper.getMainLooper());
+        if(updateLocationRunnable != null) handler.removeCallbacks(updateLocationRunnable);
+        updateLocationRunnable = new Runnable() {
+            @Override
+            public void run() {
+                    try {
+                        Log.d(TAG, "get location");
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("driver", id);
+                        Object[] object = new Object[1];
+                        object[0] = jsonObject;
+                        if(isConnected) {
+                            mSocket.emit("getDriverLocation", object, new Ack() {
+                                @Override
+                                public void call(Object... location) {
+                                    try {
+                                        JSONObject data = (JSONObject) location[0];
+                                        Log.d(TAG, data.toString());
+                                        Location position = new Gson().fromJson(data.toString(), Location.class);
+                                        EventBus.getDefault().post(position);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                        }
+                        handler.postDelayed(this, 30000);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+            }
+        };
+        handler.post(updateLocationRunnable);
+    }
+
+    private void eventAck(String key, String event) {
+        if (mSocket != null) {
+            try {
+                JSONObject object = new JSONObject();
+                object.put("event", event);
+                object.put("key", key);
+                mSocket.emit(EVENT_ACK, object);
+            } catch (JSONException e) {
+                Timber.e(e);
+            }
+        }
+    }
+
+
+
     private Emitter.Listener onDisconnect = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
             Log.i(TAG, "socket disconnected");
-            notifyUser("server disconnected");
             isConnected = false;
         }
     };

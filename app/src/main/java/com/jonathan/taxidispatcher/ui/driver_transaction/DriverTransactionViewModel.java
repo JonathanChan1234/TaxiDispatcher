@@ -63,8 +63,8 @@ public class DriverTransactionViewModel extends ViewModel {
         driverStatus = Transformations.switchMap(driverId, driverDataModel::findCurrentTransaction);
     }
 
-    public void setOccupied(Integer id, Integer occupied, Integer requirement, Integer location) {
-        driverDataModel.driverSetOccupied(id, occupied, requirement, location, response -> {
+    public void setOccupied(Integer id, Integer occupied, String requirement) {
+        driverDataModel.driverSetOccupied(id, occupied, requirement, response -> {
             startOnServeResponse.setValue(response);
         });
     }

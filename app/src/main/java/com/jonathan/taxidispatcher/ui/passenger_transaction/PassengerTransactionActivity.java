@@ -16,13 +16,11 @@ import com.jonathan.taxidispatcher.R;
 import com.jonathan.taxidispatcher.databinding.ActivityPassengerTransactionBinding;
 import com.jonathan.taxidispatcher.di.Injectable;
 import com.jonathan.taxidispatcher.event.DriverFoundEvent;
-import com.jonathan.taxidispatcher.event.PassengerShareRideFound;
 import com.jonathan.taxidispatcher.factory.PassengerTransactionViewModelFactory;
 import com.jonathan.taxidispatcher.service.PassengerSocketService;
 import com.jonathan.taxidispatcher.session.Session;
 import com.jonathan.taxidispatcher.ui.passenger_main.PassengerMainActivity;
 import com.jonathan.taxidispatcher.utils.Constants;
-import com.jonathan.taxidispatcher.utils.Utils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -111,10 +109,7 @@ public class PassengerTransactionActivity extends AppCompatActivity
                         startCommunicationService();
                         break;
                     case 102:
-                        if (response.body.data.driver != null) {
-                            viewModel.setTransactionDriver(response.body.data.driver);
-                            changeFragment(PassengerDriverFoundFragment.newInstance(), true);
-                        }
+                        changeFragment(PassengerDriverFoundFragment.newInstance(), true);
                         break;
                     case 200:
                         changeFragment(PassengerDriverConnectedFragment.newInstance(), true);
@@ -127,12 +122,13 @@ public class PassengerTransactionActivity extends AppCompatActivity
                         changeFragment(PassengerDriverConnectedFragment.newInstance(), true);
                         break;
                     case 300:
-                        Intent intent = new Intent(this, PassengerMainActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
+                        backToMainActivity();
                         break;
+                    case 301:
+                        backToMainActivity();
                     case 400:
                         // Cancel page
+                        changeFragment(PassengerCancelFragment.newInstance(), true);
                         break;
                     default:
                         break;
@@ -144,13 +140,17 @@ public class PassengerTransactionActivity extends AppCompatActivity
         });
     }
 
+    private void backToMainActivity() {
+        Intent intent = new Intent(this, PassengerMainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
     private void startCommunicationService() {
-        if (!Utils.isMyServiceRunning(PassengerSocketService.class, this)) {
-            isServiceStarted = true;
-            Intent intent = new Intent(PassengerTransactionActivity.this, PassengerSocketService.class);
-            intent.setAction(Constants.ACTION.START_FOREGROUND_SERVICE);
-            startService(intent);
-        }
+        isServiceStarted = true;
+        Intent intent = new Intent(PassengerTransactionActivity.this, PassengerSocketService.class);
+        intent.setAction(Constants.ACTION.START_FOREGROUND_SERVICE);
+        startService(intent);
     }
 
     public static void changeFragment(Fragment fragment, boolean init) {
@@ -168,11 +168,6 @@ public class PassengerTransactionActivity extends AppCompatActivity
     public void onDriverFoundEvent(DriverFoundEvent event) {
         viewModel.setTransactionDriver(event.getDriver());
         changeFragment(PassengerDriverFoundFragment.newInstance(), true);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onShareRideFound(PassengerShareRideFound event) {
-
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

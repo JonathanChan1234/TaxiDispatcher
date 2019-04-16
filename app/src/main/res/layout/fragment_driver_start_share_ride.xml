@@ -26,14 +26,15 @@
                 android:id="@+id/toggleButton"
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
-                android:background="@color/theme_blue"
+                android:background="#c2f0f0"
                 android:drawableTop="@drawable/ic_expand_24px" />
 
-            <com.github.aakira.expandablelayout.ExpandableRelativeLayout
+            <com.github.aakira.expandablelayout.ExpandableLinearLayout
                 android:id="@+id/expandableLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/theme_blue"
+                android:orientation="vertical"
+                android:background="#c2f0f0"
                 app:ael_duration="500"
                 app:ael_expanded="false"
                 app:ael_interpolator="bounce"
@@ -41,12 +42,12 @@
 
                 <TextView
                     android:id="@+id/titleText"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerHorizontal="true"
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
-                    android:gravity="center"
+                    android:layout_gravity="center"
                     android:text="Order (Share Ride)"
                     android:textColor="#000000"
                     android:textSize="16sp"
@@ -55,37 +56,34 @@
                 <!--first Passenger-->
                 <TextView
                     android:id="@+id/firstRouteText"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/titleText"
-                    android:layout_centerHorizontal="true"
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
                     android:gravity="center"
+                    android:layout_gravity="center"
                     android:textColor="#000000"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/firstTimeCounterText"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/firstRouteText"
-                    android:layout_centerHorizontal="true"
+                    android:layout_gravity="center"
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
                     android:gravity="center"
                     android:textColor="#FF0000"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:visibility="gone"/>
 
 
                 <LinearLayout
                     android:id="@+id/firstPassengerInfoGroup"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/firstTimeCounterText"
                     android:layout_gravity="center"
                     android:layout_marginBottom="10dp"
                     android:gravity="center"
@@ -113,7 +111,6 @@
                     android:id="@+id/firstButtonGroup"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/firstPassengerInfoGroup"
                     android:orientation="horizontal">
 
                     <Button
@@ -132,12 +129,11 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="match_parent"
-                        android:layout_centerHorizontal="true"
                         android:layout_margin="5dp"
                         android:background="#ff704d"
                         android:drawableStart="@drawable/ic_ride_24px"
                         android:gravity="center"
-                        android:text="Reach the Pick-up Point" />
+                        android:text="Reach Pick-up Point" />
                 </LinearLayout>
 
 
@@ -146,8 +142,6 @@
                     android:id="@+id/secondRouteText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/firstButtonGroup"
-                    android:layout_centerHorizontal="true"
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
                     android:gravity="center"
@@ -159,8 +153,6 @@
                     android:id="@+id/secondTimeCounterText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/secondRouteText"
-                    android:layout_centerHorizontal="true"
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
                     android:gravity="center"
@@ -174,7 +166,6 @@
                     android:id="@+id/secondPassengerInfoGroup"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/secondTimeCounterText"
                     android:layout_gravity="center"
                     android:layout_marginBottom="10dp"
                     android:gravity="center"
@@ -202,8 +193,8 @@
                     android:id="@+id/secondButtonGroup"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/secondPassengerInfoGroup"
                     android:orientation="horizontal">
+
                     <Button
                         android:id="@+id/secondCallPassengerButton"
                         android:layout_width="0dp"
@@ -220,19 +211,17 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="match_parent"
-                        android:layout_centerHorizontal="true"
                         android:layout_margin="5dp"
                         android:background="#ff704d"
                         android:drawableStart="@drawable/ic_ride_24px"
                         android:gravity="center"
-                        android:text="Reach the Pick-up Point" />
+                        android:text="Reach Pick-up Point" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/finalButtonGroup"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/secondButtonGroup"
                     android:orientation="horizontal">
                     <Button
                         android:id="@+id/finishButton"
@@ -240,10 +229,10 @@
                         android:layout_weight="1"
                         android:layout_margin="5dp"
                         android:layout_height="match_parent"
-                        android:background="#b3ecff"
+                        android:background="#ff99ff"
                         android:drawableStart="@drawable/ic_order_24px"
                         android:text="Finish Ride"
-                        android:textColor="@color/colorPrimary" />
+                        android:textColor="@color/black" />
                     <Button
                         android:id="@+id/exitButton"
                         android:layout_width="0dp"
@@ -256,7 +245,7 @@
                 </LinearLayout>
 
 
-            </com.github.aakira.expandablelayout.ExpandableRelativeLayout>
+            </com.github.aakira.expandablelayout.ExpandableLinearLayout>
         </LinearLayout>
 
     </android.support.constraint.ConstraintLayout>

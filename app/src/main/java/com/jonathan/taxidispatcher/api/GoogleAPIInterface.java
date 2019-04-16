@@ -20,4 +20,12 @@ public interface GoogleAPIInterface {
             @Query("destination") String destination,
             @Query("key") String key
     );
+
+    @GET("directions/json")
+    Call<DirectionModel> getRouteWithWaypoints(
+            @Query("origin")String origin,
+            @Query("destination") String destination,
+            @Query("waypoints") String waypoints,
+            @Query("key") String key
+    );
 }

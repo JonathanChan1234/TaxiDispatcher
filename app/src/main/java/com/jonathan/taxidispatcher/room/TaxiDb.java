@@ -9,9 +9,10 @@ import android.arch.persistence.room.migration.Migration;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.jonathan.taxidispatcher.data.model.RideShareTransaction;
 import com.jonathan.taxidispatcher.data.model.Transcation;
 
-@Database(entities = {Transcation.class}, version = 7)
+@Database(entities = {Transcation.class, RideShareTransaction.class}, version = 9)
 public abstract class TaxiDb extends RoomDatabase {
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
@@ -48,5 +49,5 @@ public abstract class TaxiDb extends RoomDatabase {
 
     abstract public TransactionDao transactionDao();
 //    abstract public DriverDao driverDao();
-//    abstract public RideShareTransactionDao rideShareTransactionDao();
+    abstract public RideShareTransactionDao rideShareTransactionDao();
 }

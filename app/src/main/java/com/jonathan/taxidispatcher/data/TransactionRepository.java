@@ -9,6 +9,7 @@ import android.arch.persistence.room.Transaction;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.jonathan.taxidispatcher.api.APIInterface;
 import com.jonathan.taxidispatcher.api.ApiResponse;
@@ -24,6 +25,7 @@ import com.jonathan.taxidispatcher.room.TransactionDao;
 import com.jonathan.taxidispatcher.utils.SingleLiveEvent;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -35,6 +37,7 @@ import retrofit2.Response;
 
 @Singleton
 public class TransactionRepository {
+    public static final String TAG = "Transaction Respository";
     private APIInterface apiService;
     private TransactionDao dao;
     private TaxiDb db;
@@ -223,6 +226,8 @@ public class TransactionRepository {
                 .enqueue(new Callback<TranscationResource>() {
                     @Override
                     public void onResponse(Call<TranscationResource> call, Response<TranscationResource> response) {
+                        UpdatePersonalRideTask task = new UpdatePersonalRideTask();
+                        task.execute(response.body().data);
                         transaction.setValue(new ApiResponse<TranscationResource>(response));
                     }
 
@@ -256,30 +261,54 @@ public class TransactionRepository {
         return res;
     }
 
-    /**
-     * Get the latest status of the transaction
-     * @param id transaction id
-     * @return LiveData<Transcation>
-     */
-    public LiveData<Transcation> updateTransactionStatus(Integer id) {
-        MediatorLiveData<Transcation> transcationMediatorLiveData = new MediatorLiveData<>();
-        MutableLiveData<Transcation> transcationMutableLiveData = new MutableLiveData<>();
-        db.getInvalidationTracker().addObserver(new InvalidationTracker.Observer("Transcation") {
-            @Override
-            public void onInvalidated(@NonNull Set<String> tables) {
-                for (String table : tables) {
-                    if(table.equals("Transcation")) {
-                        transcationMutableLiveData.setValue(dao.loadTransactionById(id).getValue());
-                    }
-                }
+
+    class UpdatePersonalRideTask extends AsyncTask<Transcation, Integer, Integer> {
+        @Override
+        protected void onPreExecute() {
+            Log.d(TAG,"updating status");
+        }
+
+        @Override
+        protected Integer doInBackground(Transcation... transcation) {
+            if(transcation != null) {
+                List<Transcation> list = new ArrayList<>();
+                list.add(transcation[0]);
+                dao.insertTransaction(list);
+                return transcation[0].id;
             }
-        });
-        transcationMediatorLiveData.addSource(transcationMutableLiveData, new Observer<Transcation>() {
-            @Override
-            public void onChanged(@Nullable Transcation transcation) {
-                transcationMediatorLiveData.setValue(transcation);
+            return 0;
+        }
+
+        @Override
+        protected void onPostExecute(Integer id) {
+            if(id != 0) {
+                Log.d(TAG,"updating success");
+                ReadPersonalRideStatus readTask = new ReadPersonalRideStatus();
+                readTask.execute(id);
+            } else {
+                Log.d(TAG,"fail");
             }
-        });
-        return transcationMediatorLiveData;
+        }
     }
+
+    class ReadPersonalRideStatus extends AsyncTask<Integer, Integer, Transcation> {
+        @Override
+        protected void onPreExecute() {
+            Log.d(TAG,"reading status");
+        }
+
+        @Override
+        protected Transcation doInBackground(Integer... integers) {
+            Transcation transcation = dao.loadTransactionById(integers[0]);
+            return transcation;
+        }
+
+        @Override
+        protected void onPostExecute(Transcation transcation) {
+            Log.d(TAG, transcation.desAddr);
+        }
+    }
+
+
+
 }

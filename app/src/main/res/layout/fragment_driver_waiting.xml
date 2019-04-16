@@ -19,10 +19,11 @@
             <Button
                 android:id="@+id/startSearchingPassengerButton"
                 android:layout_width="350dp"
-                android:layout_height="150dp"
+                android:layout_height="75dp"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="50dp"
-                android:text="Not On Serve"
+                android:text="Not On Service"
+                android:layout_above="@+id/plateNumberText"
                 android:textColor="@color/white"
                 android:textSize="20sp" />
 
@@ -33,28 +34,27 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="10dp"
                 android:textSize="20sp"
-                android:layout_below="@+id/startSearchingPassengerButton"
-                android:text="YT98777"/>
+                android:layout_above="@+id/cancelSearchButton"
+                android:text="YT98777"
+                android:textColor="@color/black"/>
 
             <Button
                 android:id="@+id/cancelSearchButton"
                 android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_below="@+id/startSearchingPassengerButton"
+                android:layout_height="50dp"
                 android:layout_alignParentEnd="true"
-                android:layout_marginTop="30dp"
-                android:layout_marginEnd="0dp"
-                android:background="@drawable/circle_button"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="16dp"
+                android:background="@drawable/round_button"
                 android:text="Cancel" />
 
             <Button
                 android:id="@+id/signOutTaxiButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
                 android:layout_alignParentBottom="true"
                 android:layout_marginLeft="16dp"
-                android:layout_marginBottom="48dp"
                 android:background="@color/colorPrimary"
                 android:text="Sign Out" />
 
@@ -62,8 +62,20 @@
                 android:id="@+id/waitingProgressBar"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:visibility="gone"
-                android:layout_centerInParent="true" />
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="50dp"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/waitingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/waitingProgressBar"
+                android:text="Finding Passengers..."
+                android:layout_centerHorizontal="true"
+                android:textColor="@color/black"
+                android:visibility="visible"
+                android:textSize="30sp"/>
         </RelativeLayout>
 
     </FrameLayout>

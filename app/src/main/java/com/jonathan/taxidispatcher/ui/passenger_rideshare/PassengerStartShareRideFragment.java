@@ -1,6 +1,7 @@
 package com.jonathan.taxidispatcher.ui.passenger_rideshare;
 
 
+import android.app.AlertDialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
@@ -34,19 +35,30 @@ import com.jonathan.taxidispatcher.api.ApiResponse;
 import com.jonathan.taxidispatcher.data.model.RideShare;
 import com.jonathan.taxidispatcher.data.model.RideSharePairingResponse;
 import com.jonathan.taxidispatcher.data.model.RideShareTransaction;
+import com.jonathan.taxidispatcher.data.model.StandardResponse;
 import com.jonathan.taxidispatcher.databinding.FragmentPassegnerStartShareRideBinding;
 import com.jonathan.taxidispatcher.di.Injectable;
 import com.jonathan.taxidispatcher.event.Location;
 import com.jonathan.taxidispatcher.event.LocationUpdateEvent;
+import com.jonathan.taxidispatcher.event.TimerEvent;
 import com.jonathan.taxidispatcher.factory.PassengerShareRideViewModelFactory;
 import com.jonathan.taxidispatcher.session.Session;
+import com.jonathan.taxidispatcher.ui.passenger_main.PassengerMainActivity;
+import com.jonathan.taxidispatcher.ui.passenger_transaction.RatingActivity;
+import com.jonathan.taxidispatcher.utils.MapUtils;
 import com.jonathan.taxidispatcher.utils.RouteDrawingUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.Locale;
+
 import javax.inject.Inject;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PassengerStartShareRideFragment extends Fragment implements OnMapReadyCallback, Injectable {
     boolean isExpanded = false;
@@ -67,6 +79,7 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
     MarkerOptions locationOptions = new MarkerOptions();
     Marker driverMarker;
     PolylineOptions lines = null;
+    String ownRoute;
 
     public PassengerStartShareRideFragment() {
         // Required empty public constructor
@@ -75,6 +88,7 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        MapUtils.updateLocationUI(googleMap);
         setMarker();
     }
 
@@ -98,9 +112,9 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         viewModel = ViewModelProviders.of(getActivity(), factory).get(PassengerRideShareViewModel.class);
-        if(viewModel.getRideShareTranscation() != null) {
+        if (viewModel.getRideShareTranscation() != null) {
             transcation = viewModel.getRideShareTranscation();
-            if(transcation.first_transaction.user.id == Session.getUserId(getContext())) {
+            if (transcation.first_transaction.user.id == Session.getUserId(getContext())) {
                 ownRide = transcation.first_transaction;
                 passengerRide = transcation.second_transaction;
             } else {
@@ -126,10 +140,10 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
     private void initUI() {
         //Initialize the ride and driver info
         binding.driverUsernameText.setText("Username: " + transcation.driver.username);
-        if(transcation.taxi != null)    {
+        if (transcation.taxi != null) {
             binding.taxiPlatenumberText.setText("Plate Number:" + transcation.taxi.platenumber);
         }
-        String ownRoute = "From " + ownRide.startAddr + " To " + ownRide.desAddr;
+        ownRoute = "From " + ownRide.startAddr + " To " + ownRide.desAddr;
         binding.routeText.setText(ownRoute);
         String passengerRoute = "From " + passengerRide.startAddr + " To " + passengerRide.desAddr;
         binding.passengerRouteText.setText(passengerRoute);
@@ -142,17 +156,17 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
         binding.toggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!isExpanded) {
+                if (!isExpanded) {
                     Drawable collapseIcon = getResources().getDrawable(R.drawable.ic_collapse_24px);
                     int h = collapseIcon.getIntrinsicHeight();
                     int w = collapseIcon.getIntrinsicWidth();
-                    collapseIcon.setBounds( 0, 0, w, h );
+                    collapseIcon.setBounds(0, 0, w, h);
                     binding.toggleButton.setCompoundDrawables(null, collapseIcon, null, null);
                 } else {
                     Drawable expandIcon = getResources().getDrawable(R.drawable.ic_expand_24px);
                     int h = expandIcon.getIntrinsicHeight();
                     int w = expandIcon.getIntrinsicWidth();
-                    expandIcon.setBounds( 0, 0, w, h );
+                    expandIcon.setBounds(0, 0, w, h);
                     binding.toggleButton.setCompoundDrawables(null, expandIcon, null, null);
                 }
                 isExpanded = !isExpanded;
@@ -161,12 +175,12 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
         });
 
         viewModel.getRoute().observe(this, response -> {
-            if(response.isSuccessful() && mMap != null) {
+            if (response.isSuccessful() && mMap != null) {
                 // Draw predicted route
                 lines = RouteDrawingUtils.getGoogleMapPolyline(response.body);
                 setMarker();
                 // Add predicted arrival time
-                binding.arrivalTimeText.setText( String.valueOf(response.body.routes.get(0).legs.get(0).duration.value / 60) + " minutes");
+                binding.arrivalTimeText.setText(String.valueOf(response.body.routes.get(0).legs.get(0).duration.value / 60) + " minutes");
             } else {
                 Toast.makeText(getContext(), "Cannot connect to the Internet", Toast.LENGTH_SHORT).show();
             }
@@ -179,9 +193,41 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
             startActivity(intent);
         });
 
-        // Message the driver
-        binding.messageDriverButton.setOnClickListener(view -> {
+        // Confirm the ride
+        binding.confirmRideButton.setOnClickListener(view -> {
+            AlertDialog dialog = new AlertDialog.Builder(getContext())
+                    .setTitle("Transaction Confirmation")
+                    .setMessage("Are you sure to confirm this ride?")
+                    .setPositiveButton("Yes", ((dialogInterface, i) -> {
+                        apiService.passengerConfirmShareRide(transcation.id, ownRide.id)
+                                .enqueue(new Callback<StandardResponse>() {
+                                    @Override
+                                    public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
+                                        if (response.body() != null) {
+                                            // Go the Rating Activity
+                                            if (response.body().success == 1) {
+                                                Intent intent = new Intent(getActivity(), RatingActivity.class);
+                                                intent.putExtra("route", ownRoute);
+                                                if (transcation != null) {
+                                                    intent.putExtra("driverId", transcation.driver.id);
+                                                    intent.putExtra("driver", transcation.driver.username);
+                                                }
+                                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                startActivity(intent);
+                                            }
+                                        }
+                                    }
 
+                                    @Override
+                                    public void onFailure(Call<StandardResponse> call, Throwable t) {
+                                        Toast.makeText(getContext(), "Cannot connect to the Internet", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }))
+                    .setNegativeButton("No", ((dialogInterface, i) -> {
+                        dialogInterface.dismiss();
+                    }))
+                    .show();
         });
 
         // Report No show
@@ -189,20 +235,49 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
 
         });
 
-        // Driver already reach the pick-up point
-        if(transcation.status == 201) {
-            binding.reportNoShowButton.setEnabled(false);
-            binding.cancelButton.setEnabled(false);
+        if (transcation.first_confirmed == 201) {
             isDriverReached = true;
         }
+
+        binding.cancelButton.setOnClickListener(view -> {
+            AlertDialog alertDialog = new AlertDialog.Builder(getContext())
+                    .setTitle("Cancel the Transaction")
+                    .setMessage("Are you sure to cancel this ride?")
+                    .setPositiveButton("OK", ((dialogInterface, i) -> {
+                        apiService.cancelShareRideOrder(ownRide.id)
+                                .enqueue(new Callback<StandardResponse>() {
+                                    @Override
+                                    public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
+                                        if (response.body().success == 1) {
+                                            Toast.makeText(getContext(), "Cancelled successfully", Toast.LENGTH_SHORT).show();
+                                            toMainActivity();
+                                        } else {
+                                            Toast.makeText(getContext(), response.body().message, Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<StandardResponse> call, Throwable t) {
+                                        Toast.makeText(getContext(), "Cannot connect to the Internet", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }))
+                    .setNegativeButton("No", ((dialogInterface, i) -> dialogInterface.cancel()))
+                    .show();
+        });
         Log.d("Start Ride", "set marker");
         setMarker();
     }
 
+    private void toMainActivity() {
+        Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
     private void setMarker() {
-        Log.d("Start Ride", "set marker");
         if (transcation != null && mMap != null) {
-            Log.d("Start Ride", "set marker");
+            Log.d("Set Marker", "set marker");
             mMap.clear();
             MarkerOptions ownPickup = new MarkerOptions();
             ownPickup.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
@@ -230,10 +305,9 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
 
             LatLng latlng = new LatLng(Double.parseDouble(ownRide.startLat), Double.parseDouble(ownRide.startLong));
             Log.i("Passenger Found", latlng.latitude + ", " + latlng.longitude);
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-            mMap.moveCamera(CameraUpdateFactory.zoomTo(14f));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng, 16f));
 
-            if(driverPosition != null && lines != null) {
+            if (driverPosition != null && lines != null) {
                 locationOptions.position(driverPosition);
                 locationOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.vehicle));
                 locationOptions.title("Driver");
@@ -245,13 +319,15 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onLocationUpdateEvent(Location event) {
-        if(mMap != null) {
-            if(transcation != null) {
-                if(driverMarker != null) {
+        driverPosition = new LatLng(Double.parseDouble(event.latitude),
+                Double.parseDouble(event.longitude));
+        if (mMap != null) {
+            if (transcation != null) {
+                if (driverMarker != null) {
                     driverMarker.setPosition(new LatLng(Double.parseDouble(event.latitude),
                             Double.parseDouble(event.longitude)));
                 }
-                if(!isDriverReached) {
+                if (!isDriverReached) {
                     viewModel.searchRoute(driverPosition);
                 } else {
                     viewModel.trackLocation(driverPosition);
@@ -259,6 +335,13 @@ public class PassengerStartShareRideFragment extends Fragment implements OnMapRe
                 Log.i("location update event", "map update");
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onTimerEvent(TimerEvent event) {
+        String text =  "Please reach within " + String.format(new Locale("ENG"), "%02d", event.getMinute()) +
+                ":" + String.format(new Locale("ENG"), "%02d", event.getSecond());
+        binding.timeCounterText.setText(text);
     }
 
 }

@@ -117,7 +117,7 @@
                         android:id="@+id/callDriverButton"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_marginBottom="5dp"
                         android:background="#ffcc00"
                         android:drawableStart="@drawable/ic_phone_black_24dp"
@@ -129,13 +129,14 @@
                         android:id="@+id/confirmButton"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:background="#0099ff"
                         android:drawableStart="@drawable/ic_message_black_24dp"
                         android:gravity="center"
                         android:layout_margin="5dp"
                         android:text="Confirm" />
                 </LinearLayout>
+
                 <LinearLayout
                     android:id="@+id/secondButtonGroup"
                     android:layout_width="match_parent"

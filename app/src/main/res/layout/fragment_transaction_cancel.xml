@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.driver_transaction.TransactionCancelFragment">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Order Cancelled"
+                android:drawableStart="@drawable/ic_order_24px"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textAllCaps="true"
+                android:layout_margin="5dp"
+                android:layout_gravity="center"/>
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_cancel_480dp"/>
+
+            <TextView
+                android:id="@+id/orderIdText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Order ID:  "
+                android:textColor="@color/black"
+                android:textSize="30sp"
+                android:layout_margin="5dp"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/routeText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="From XXX To YYY"
+                android:gravity="center"
+                android:layout_margin="10dp"
+                android:textColor="@color/black"
+                android:textSize="20sp"/>
+
+        </LinearLayout>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Back"
+            android:id="@+id/backButton"
+            android:textColor="@color/black"
+            android:layout_alignParentBottom="true"
+            android:textSize="20sp"/>
+    </RelativeLayout>
+
+
+
+</layout>

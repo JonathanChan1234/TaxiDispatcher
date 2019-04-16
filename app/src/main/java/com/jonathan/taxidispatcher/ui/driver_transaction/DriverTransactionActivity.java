@@ -15,12 +15,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.jonathan.taxidispatcher.R;
-import com.jonathan.taxidispatcher.data.model.DriverFoundResponse;
+import com.jonathan.taxidispatcher.data.model.Transcation;
 import com.jonathan.taxidispatcher.di.Injectable;
 import com.jonathan.taxidispatcher.event.driver.DriverShareRideFoundEvent;
-import com.jonathan.taxidispatcher.event.driver.PassengerFoundEvent;
 import com.jonathan.taxidispatcher.event.TranscationCompletedEvent;
 import com.jonathan.taxidispatcher.factory.DriverTransactionViewModelFactory;
 import com.jonathan.taxidispatcher.service.DriverSocketService;
@@ -102,88 +100,92 @@ public class DriverTransactionActivity extends AppCompatActivity
     }
 
     private void refreshPage() {
-        if (mBound) {
-            viewModel.checkDriverStatus(Session.getUserId(this));
-            viewModel.getDriverStatus().observe(this, response -> {
-                if (response.isSuccessful()) {
-                    if (response.body.occupied == 1) {
-                        viewModel.setOnServe(false);
-                    } else {
-                        viewModel.setOnServe(true);
-                    }
-                    if (response.body.success == 1) {
-                        if (response.body.type.equals("s")) {
-                            Session.saveCurrentShareRideId(this, response.body.transactionId);
-                            Session.saveCurrentTransactionID(this, 0);
-                            viewModel.getRideShareResource(response.body.transactionId).observe(this, rideShare -> {
-                                if (rideShare.isSuccessful()) {
-                                    viewModel.setRideShareResource(rideShare.body.data);
-                                    switch (rideShare.body.data.status) {
-                                        case 101:
-                                            changeFragment(DriverShareRideFoundFragment.newInstance(), true);
-                                            break;
-                                        case 200:
-                                            sendPositionToPassenger();
-                                            changeFragment(DriverStartShareRideFragment.newInstance(), true);
-                                            break;
-                                        case 201:
-                                            sendPositionToPassenger();
-                                            changeFragment(DriverStartShareRideFragment.newInstance(), true);
-                                            break;
-                                        case 202:
-                                            sendPositionToPassenger();
-                                            changeFragment(DriverStartShareRideFragment.newInstance(), true);
-                                            break;
-                                        case 400:
-                                            changeFragment(DriverShareRideFoundFragment.newInstance(), true);
-                                            break;
-                                    }
+        viewModel.checkDriverStatus(Session.getUserId(this));
+        viewModel.getDriverStatus().observe(this, response -> {
+            if (response.isSuccessful()) {
+                if (response.body.occupied == 1) {
+                    viewModel.setOnServe(false);
+                } else {
+                    viewModel.setOnServe(true);
+                }
+                if (response.body.success == 1) {
+                    if (response.body.type.equals("s")) {
+                        Session.saveCurrentShareRideId(this, response.body.transactionId);
+                        Session.saveCurrentTransactionID(this, 0);
+                        viewModel.getRideShareResource(response.body.transactionId).observe(this, rideShare -> {
+                            if (rideShare.isSuccessful()) {
+                                viewModel.setRideShareResource(rideShare.body.data);
+                                switch (rideShare.body.data.status) {
+                                    case 101:
+                                        changeFragment(DriverShareRideFoundFragment.newInstance(), true);
+                                        break;
+                                    case 200:
+                                        changeFragment(DriverStartShareRideFragment.newInstance(), true);
+                                        break;
+                                    case 201:
+                                        changeFragment(DriverStartShareRideFragment.newInstance(), true);
+                                        break;
+                                    case 202:
+                                        changeFragment(DriverStartShareRideFragment.newInstance(), true);
+                                        break;
+                                    case 300: // Confirm Ride
+                                        stopTimer();
+                                        changeFragment(DriverStartShareRideFragment.newInstance(), true);
+                                        break;
+                                    case 301: //Finish Ride
+                                        stopTimer();
+                                        changeFragment(DriverWaitingFragment.newInstance(), true);
+                                        break;
+                                    case 400: //Cancelled
+                                        stopTimer();
+                                        changeFragment(DriverWaitingFragment.newInstance(), true);
+                                        break;
                                 }
-                            });
-                        } else {
-                            Session.saveCurrentTransactionID(this, response.body.transactionId);
-                            Session.saveCurrentShareRideId(this, 0);
-                            viewModel.getTranscationResource(response.body.transactionId).observe(this, transaction -> {
-                                if (transaction.isSuccessful()) {
-                                    viewModel.setTranscation(transaction.body.data);
-                                    switch (transaction.body.data.status) {
-                                        case 101:
-                                            changeFragment(DriverPassengerFoundFragment.newInstance(), true);
-                                            break;
-                                        case 102:
-                                            changeFragment(DriverWaitingReplyFragment.newInstance(), true);
-                                            break;
-                                        case 200:
-                                            changeFragment(DriverStartRideFragment.newInstance(), true);
-                                            break;
-                                        case 201:
-                                            changeFragment(DriverStartRideFragment.newInstance(), true);
-                                            break;
-                                        case 202:
-                                            changeFragment(DriverStartRideFragment.newInstance(), true);
-                                            break;
-                                        case 400:
-                                            changeFragment(DriverWaitingFragment.newInstance(), true);
-                                            break;
-                                        default:
-                                            changeFragment(DriverWaitingFragment.newInstance(), true);
-                                            break;
-                                    }
-                                }
-                            });
-                        }
+                            }
+                        });
                     } else {
-                        changeFragment(DriverWaitingFragment.newInstance(), true);
-                        Intent intent = new Intent(this, DriverSocketService.class);
-                        intent.setAction(STOP_TIMER);
-                        startService(intent);
+                        Session.saveCurrentTransactionID(this, response.body.transactionId);
+                        Session.saveCurrentShareRideId(this, 0);
+                        viewModel.getTranscationResource(response.body.transactionId).observe(this, transaction -> {
+                            if (transaction.isSuccessful()) {
+                                viewModel.setTranscation(transaction.body.data);
+                                switch (transaction.body.data.status) {
+                                    case 101:
+                                        changeFragment(DriverPassengerFoundFragment.newInstance(), true);
+                                        break;
+                                    case 102:
+                                        changeFragment(DriverWaitingReplyFragment.newInstance(), true);
+                                        break;
+                                    case 200:
+                                        changeFragment(DriverStartRideFragment.newInstance(), true);
+                                        break;
+                                    case 201:
+                                        changeFragment(DriverStartRideFragment.newInstance(), true);
+                                        break;
+                                    case 202:
+                                        changeFragment(DriverStartRideFragment.newInstance(), true);
+                                        break;
+                                    case 400:
+                                        changeFragment(TransactionCancelFragment.newInstance(), true);
+                                        break;
+                                    default:
+                                        changeFragment(DriverWaitingFragment.newInstance(), true);
+                                        break;
+                                }
+                            }
+                        });
                     }
                 } else {
-//                    changeFragment(DriverWaitingFragment.newInstance(), true);
-                    Toast.makeText(this, "No internet Connection", Toast.LENGTH_SHORT).show();
+                    changeFragment(DriverWaitingFragment.newInstance(), true);
+                    Intent intent = new Intent(this, DriverSocketService.class);
+                    intent.setAction(STOP_TIMER);
+                    startService(intent);
                 }
-            });
-        }
+            } else {
+//                    changeFragment(DriverWaitingFragment.newInstance(), true);
+                Toast.makeText(this, "No internet Connection", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -198,17 +200,15 @@ public class DriverTransactionActivity extends AppCompatActivity
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onPassengerFoundEvent(PassengerFoundEvent event) {
-        // Convert the JSON to POJO
-        Gson gson = new Gson();
-        DriverFoundResponse data = gson.fromJson(event.getData(), DriverFoundResponse.class);
-        viewModel.setTranscation(data.transcation);
+    public void onPassengerFoundEvent(Transcation event) {
+        viewModel.setTranscation(event);
         viewModel.setRideType("p");
         changeFragment(DriverPassengerFoundFragment.newInstance(), true);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onShareRideFound(DriverShareRideFoundEvent event) {
+        Log.d("Share Ride Event", "Received");
         viewModel.setRideShareResource(event.transcation);
         changeFragment(DriverShareRideFoundFragment.newInstance(), true);
     }
@@ -218,13 +218,13 @@ public class DriverTransactionActivity extends AppCompatActivity
         if (event.getResponse() == 1) {
             changeFragment(DriverStartRideFragment.newInstance(), true);
         } else {
-            changeFragment(DriverWaitingFragment.newInstance(), true);
+            changeFragment(TransactionCancelFragment.newInstance(), true);
         }
     }
 
-    private void sendPositionToPassenger() {
+    private void stopTimer() {
         Intent intent = new Intent(this, DriverSocketService.class);
-        intent.setAction(REPORT_POSITION_TO_PASSENGER);
+        intent.setAction(STOP_TIMER);
         startService(intent);
     }
 

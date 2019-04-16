@@ -108,6 +108,7 @@ public class DriverMainActivity extends AppCompatActivity implements HasSupportF
                         changeFragment(PassengerSettingFragment.newInstance(), false);
                         break;
                     case R.id.orderHistoryButton:
+                        changeFragment(DriverOrderFragment.newInstance(), false);
                         break;
                     case R.id.manageTaxiButton:
                         changeFragment(DriverManageTaxiFragment.newInstance(), false);

@@ -66,12 +66,24 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/timeCounterText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/arrivalTimeText"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginBottom="5dp"
+                    android:gravity="center"
+                    android:textColor="#FF0000"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+
 
                 <LinearLayout
                     android:id="@+id/driverInfoGroup"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/arrivalTimeText"
+                    android:layout_below="@+id/timeCounterText"
                     android:layout_gravity="center"
                     android:layout_weight="1"
                     android:background="#66ffc2"
@@ -162,15 +174,15 @@
                         android:text="Call Your Driver" />
 
                     <Button
-                        android:id="@+id/messageDriverButton"
+                        android:id="@+id/confirmRideButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_margin="5dp"
                         android:width="0dp"
                         android:background="#0099ff"
-                        android:drawableStart="@drawable/ic_message_black_24dp"
-                        android:text="Message Your Driver" />
+                        android:drawableStart="@drawable/ic_order_24px"
+                        android:text="Confirm Ride" />
 
                 </LinearLayout>
 
@@ -200,7 +212,7 @@
                         android:layout_weight="1"
                         android:width="0dp"
                         android:background="#ff5050"
-                        android:drawableStart="@drawable/ic_order_24px"
+                        android:drawableStart="@drawable/ic_cancel_24dp"
                         android:text="Cancel Order" />
 
                 </LinearLayout>

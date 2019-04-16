@@ -5,7 +5,9 @@ import android.app.AlertDialog;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -25,8 +27,11 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.jonathan.taxidispatcher.R;
 import com.jonathan.taxidispatcher.api.APIInterface;
+import com.jonathan.taxidispatcher.api.GoogleAPIInterface;
+import com.jonathan.taxidispatcher.data.model.DirectionModel;
 import com.jonathan.taxidispatcher.data.model.StandardResponse;
 import com.jonathan.taxidispatcher.data.model.Transcation;
 import com.jonathan.taxidispatcher.databinding.FragmentDriverStartRideBinding;
@@ -35,6 +40,8 @@ import com.jonathan.taxidispatcher.event.TimerEvent;
 import com.jonathan.taxidispatcher.factory.DriverTransactionViewModelFactory;
 import com.jonathan.taxidispatcher.service.DriverSocketService;
 import com.jonathan.taxidispatcher.session.Session;
+import com.jonathan.taxidispatcher.utils.Constants;
+import com.jonathan.taxidispatcher.utils.RouteDrawingUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -48,19 +55,28 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static com.jonathan.taxidispatcher.ui.driver_transaction.DriverTransactionActivity.STOP_TIMER;
+
 public class DriverStartRideFragment extends Fragment
         implements Injectable,
         OnMapReadyCallback {
     public static final String START_REACH_TIMER = "startReachTimer";
     FragmentDriverStartRideBinding binding;
     GoogleMap mMap;
+
     @Inject
     DriverTransactionViewModelFactory factory;
     @Inject
     APIInterface apiService;
+
+    @Inject
+    GoogleAPIInterface googleAPIService;
+
     DriverTransactionViewModel viewModel;
     Transcation transcation;
     boolean isExpanded = false;
+
+    int updateCount = 0;
 
     public DriverStartRideFragment() {
         // Required empty public constructor
@@ -69,7 +85,6 @@ public class DriverStartRideFragment extends Fragment
     public static DriverStartRideFragment newInstance() {
         return new DriverStartRideFragment();
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -85,7 +100,10 @@ public class DriverStartRideFragment extends Fragment
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        setMarker();
+        if (transcation != null) {
+            setMarker(new LatLng(Double.parseDouble(transcation.startLat),
+                    Double.parseDouble(transcation.startLong)));
+        }
     }
 
     @Override
@@ -94,14 +112,16 @@ public class DriverStartRideFragment extends Fragment
         viewModel = ViewModelProviders.of(getActivity(), factory).get(DriverTransactionViewModel.class);
         if (viewModel.getTranscation() != null) {
             transcation = viewModel.getTranscation();
+            initUI();
         } else {
             Toast.makeText(getContext(), "You do not have transaction", Toast.LENGTH_SHORT).show();
         }
-        initUI();
     }
 
     private void initUI() {
         if (transcation != null) {
+            setMarker(new LatLng(Double.parseDouble(transcation.startLat),
+                    Double.parseDouble(transcation.startLong)));
             String routeText = "From " + transcation.startAddr + " To " + transcation.desAddr;
             binding.routeText.setText(routeText);
             final ExpandableRelativeLayout expandBlock = binding.getRoot().findViewById(R.id.expandableLayout);
@@ -145,7 +165,7 @@ public class DriverStartRideFragment extends Fragment
             });
 
             binding.reachPickupPointButton.setOnClickListener(reachPickUpPoint);
-            if(transcation.status == 202) {
+            if (transcation.status == 202) {
                 binding.reachPickupPointButton.setText("Cancel Ride");
             }
 
@@ -155,13 +175,52 @@ public class DriverStartRideFragment extends Fragment
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onLocationUpdate(Location location) {
+        if(transcation != null) {
+            updateCount += (++updateCount) % 4; // Limit the route update rate
+            if(updateCount == 3) {
+                String origin;
+                String destination;
+                if(transcation.status == 200) { //Driver not yet reach the pick-up points
+                    origin = location.getLatitude() + "," + location.getLongitude();
+                    destination = transcation.startLat + "," + transcation.startLong;
+                } else {
+                    origin = location.getLatitude() + "," + location.getLongitude();
+                    destination = transcation.desLat + "," + transcation.desLong;
+                }
+                googleAPIService.getRoute(origin, destination, Constants.API_key)
+                        .enqueue(new Callback<DirectionModel>() {
+                            @Override
+                            public void onResponse(Call<DirectionModel> call, Response<DirectionModel> response) {
+                                if(response.body().status.equals("OK")) {
+                                    updateDriverMap(RouteDrawingUtils.getNavigationLine(response.body()), location);
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<DirectionModel> call, Throwable t) {
+                                Toast.makeText(getContext(), "Cannot connect to the Internet", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+        }
+    }
+
+    private void updateDriverMap(PolylineOptions lines, Location location) {
+        if(mMap != null) {
+            mMap.addPolyline(lines);
+            setMarker(new LatLng(location.getLatitude(), location.getLongitude()));
+        }
+    }
+
     View.OnClickListener reachPickUpPoint = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            if(transcation.status == 202) {
+            if (transcation.status == 202) {
                 cancelOrder();
             } else {
-               reachPickup(transcation.id);
+                reachPickup(transcation.id);
             }
         }
     };
@@ -173,7 +232,8 @@ public class DriverStartRideFragment extends Fragment
                     public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
                         if (response.isSuccessful()) {
                             if (response.body().success == 1) {
-
+                                stopTimer();
+                                resetStatus();
                             } else {
                                 Toast.makeText(getContext(), response.body().message, Toast.LENGTH_LONG).show();
                             }
@@ -189,6 +249,7 @@ public class DriverStartRideFragment extends Fragment
 
     /**
      * Driver reach the pick up point
+     *
      * @param id
      */
     private void reachPickup(int id) {
@@ -223,21 +284,11 @@ public class DriverStartRideFragment extends Fragment
                             .enqueue(new Callback<StandardResponse>() {
                                 @Override
                                 public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
-                                    if(response.isSuccessful()) {
-                                        if(response.body().success == 1) {
+                                    if (response.isSuccessful()) {
+                                        if (response.body().success == 1) {
                                             Toast.makeText(getContext(), "Cancel successfully", Toast.LENGTH_SHORT).show();
-                                            AlertDialog alertDialog = new AlertDialog.Builder(getContext())
-                                                    .setTitle("Start A new Ride")
-                                                    .setMessage("Do you want to start a new ride")
-                                                    .setPositiveButton("Yes", ((dialogInterface, i) -> resetStatus()))
-                                                    .setNegativeButton("No", ((dialogInterface, i) ->
-                                                            DriverTransactionActivity.changeFragment(DriverWaitingFragment.newInstance(),
-                                                                    true)))
-                                                    .setOnCancelListener(dialogInterface1 -> {
-                                                        DriverTransactionActivity.changeFragment(DriverWaitingFragment.newInstance(),
-                                                                true);
-                                                    })
-                                                    .show();
+                                            stopTimer();
+                                            resetStatus();
                                         } else {
                                             Toast.makeText(getContext(), response.body().message, Toast.LENGTH_SHORT).show();
                                         }
@@ -261,9 +312,10 @@ public class DriverStartRideFragment extends Fragment
                 .enqueue(new Callback<StandardResponse>() {
                     @Override
                     public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
-                        if(response.isSuccessful()) {
-                            if(response.body().success == 1) {
+                        if (response.isSuccessful()) {
+                            if (response.body().success == 1) {
                                 Toast.makeText(getContext(), "You have completed the ride", Toast.LENGTH_SHORT).show();
+                                stopTimer();
                                 resetStatus();
                             } else {
                                 Toast.makeText(getContext(), "Your Passenger haven't confirm the ride", Toast.LENGTH_SHORT).show();
@@ -273,9 +325,15 @@ public class DriverStartRideFragment extends Fragment
 
                     @Override
                     public void onFailure(Call<StandardResponse> call, Throwable t) {
-                        Toast.makeText(getContext(), "Fail to connection to the Internet", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Fail to connect to the Internet", Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    private void stopTimer() {
+        Intent intent = new Intent(getActivity(), DriverSocketService.class);
+        intent.setAction(STOP_TIMER);
+        getActivity().startService(intent);
     }
 
     private void resetStatus() {
@@ -283,12 +341,12 @@ public class DriverStartRideFragment extends Fragment
                 .setTitle("Start A new Ride")
                 .setMessage("Do you want to start a new ride")
                 .setPositiveButton("Yes", ((dialogInterface, i) -> {
-                    apiService.setOccupied(Session.getUserId(getContext()), 0)
+                    apiService.setOccupied(Session.getUserId(getContext()), 1, null)
                             .enqueue(new Callback<StandardResponse>() {
                                 @Override
                                 public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
-                                    if(response.isSuccessful()) {
-                                        if(response.body().success == 1) {
+                                    if (response.isSuccessful()) {
+                                        if (response.body().success == 1) {
                                             Toast.makeText(getContext(), "You are ready to make another call", Toast.LENGTH_SHORT).show();
                                         }
                                         DriverTransactionActivity.changeFragment(DriverWaitingFragment.newInstance(),
@@ -313,8 +371,8 @@ public class DriverStartRideFragment extends Fragment
                 .show();
     }
 
-    private void setMarker() {
-        if (transcation != null) {
+    private void setMarker(LatLng latlng) {
+        if (transcation != null && mMap != null) {
             MarkerOptions originOptions = new MarkerOptions();
             originOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
             originOptions.title("Pick-up");
@@ -328,10 +386,10 @@ public class DriverStartRideFragment extends Fragment
             destinationOptions.position(new LatLng(Double.parseDouble(transcation.desLat), Double.parseDouble(transcation.desLong)));
             mMap.addMarker(destinationOptions);
 
-            LatLng latlng = new LatLng(Double.parseDouble(transcation.startLat), Double.parseDouble(transcation.startLong));
             Log.i("Passenger Found", latlng.latitude + ", " + latlng.longitude);
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-            mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    latlng, 15f));
+
         }
     }
 
@@ -353,7 +411,8 @@ public class DriverStartRideFragment extends Fragment
                 String.format(new Locale("ENG"), "%02d", event.getMinute()) +
                 ":" + String.format(new Locale("ENG"), "%02d", event.getSecond());
         binding.timeCounterText.setText(text);
-        if(event.getMinute() == 0 && event.getSecond() == 0) {
+        binding.timeCounterText.setTextColor(Color.RED);
+        if (event.getMinute() == 0 && event.getSecond() == 0) {
             transcation.status = 202;
             binding.reachPickupPointButton.setText("Cancel Ride");
         }

@@ -4,34 +4,36 @@ import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
+import android.arch.persistence.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-@Entity(indices = {@Index("id")}, primaryKeys = {"id"})
+@Entity
 public class RideShareTransaction {
     @SerializedName("id")
     @Expose
+    @PrimaryKey
     public Integer id;
 
     @SerializedName("first_transaction")
     @Expose
-    @Embedded(prefix = "first_transaction_")
+    @Embedded(prefix = "firstTransaction_")
     public RideShare first_transaction;
 
     @SerializedName("second_transaction")
     @Expose
-    @Embedded(prefix = "second_transaction_")
+    @Embedded(prefix = "secondTransaction_")
     public RideShare second_transaction;
 
     @SerializedName("driver")
     @Expose
-    @Embedded(prefix = "driver_")
+    @Ignore
     public Driver driver;
 
     @SerializedName("taxi")
     @Expose
-    @Embedded(prefix = "taxi_")
+    @Ignore
     public RideShareTaxi taxi;
 
     @SerializedName("status")
@@ -55,4 +57,12 @@ public class RideShareTransaction {
     @SerializedName("second_confirmed")
     @Expose
     public Integer second_confirmed;
+
+    @SerializedName("firstReachTime")
+    @Expose
+    public String first_reach_time;
+
+    @SerializedName("secondReachTime")
+    @Expose
+    public String second_reach_time;
 }

@@ -23,8 +23,8 @@ public class DriverDataModel {
         this.apiService = apiService;
     }
 
-    public void driverSetOccupied(Integer id, Integer occupied, Integer requirement, Integer location, OnDataReadyInterface callback) {
-        apiService.setOccupied(id, occupied)
+    public void driverSetOccupied(Integer id, Integer occupied, String requirement, OnDataReadyInterface callback) {
+        apiService.setOccupied(id, occupied, requirement)
                 .enqueue(new Callback<StandardResponse>() {
                     @Override
                     public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {

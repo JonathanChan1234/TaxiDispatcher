@@ -15,27 +15,36 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.jonathan.taxidispatcher.R;
+import com.jonathan.taxidispatcher.api.APIInterface;
+import com.jonathan.taxidispatcher.data.model.DriverTransactionType;
 import com.jonathan.taxidispatcher.databinding.DialogDriverRequirementBinding;
 import com.jonathan.taxidispatcher.databinding.FragmentDriverWaitingBinding;
 import com.jonathan.taxidispatcher.di.Injectable;
-import com.jonathan.taxidispatcher.event.driver.SetServingEvent;
 import com.jonathan.taxidispatcher.factory.DriverTransactionViewModelFactory;
 import com.jonathan.taxidispatcher.session.Session;
 import com.jonathan.taxidispatcher.ui.driver_main.DriverMainActivity;
 import com.jonathan.taxidispatcher.utils.GPSPromptEnabled;
 
-import org.greenrobot.eventbus.EventBus;
 
 import javax.inject.Inject;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DriverWaitingFragment extends Fragment implements Injectable {
     DriverTransactionViewModel viewModel;
 
     @Inject
     DriverTransactionViewModelFactory factory;
+
+    @Inject
+    APIInterface apiService;
     FragmentDriverWaitingBinding binding;
-    int requirement = 1;
+    String requirement = "b";
     int location = 1;
+
+    int driverId;
 
     public DriverWaitingFragment() {
         // Required empty public constructor
@@ -60,11 +69,7 @@ public class DriverWaitingFragment extends Fragment implements Injectable {
         binding.setLifecycleOwner(this);
         binding.setViewModel(viewModel);
         initUI();
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
+        driverId = Session.getUserId(getActivity());
     }
 
     @Override
@@ -89,16 +94,32 @@ public class DriverWaitingFragment extends Fragment implements Injectable {
         binding.startSearchingPassengerButton.setOnClickListener(startSearchingForPassenger);
         binding.cancelSearchButton.setOnClickListener(cancelSearch);
         binding.signOutTaxiButton.setOnClickListener(signoutTaxi);
+        apiService.checkDriverTransactionStatus(Session.getUserId(getActivity()))
+                .enqueue(new Callback<DriverTransactionType>() {
+                    @Override
+                    public void onResponse(Call<DriverTransactionType> call, Response<DriverTransactionType> response) {
+                       if(response.body() != null) {
+                           if(response.body().occupied == 1) {
+                               setNotOnServeState();
+                           } else {
+                               setOnServeState();
+                           }
+                       }
+                    }
+
+                    @Override
+                    public void onFailure(Call<DriverTransactionType> call, Throwable t) {
+                        Toast.makeText(getActivity(), "Cannot connect to the Internet",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
         viewModel.getStartOnServeResponse().observe(this, response -> {
             if(response.isSuccessful()) {
                 if(response.body.success == 1) {
                     if(response.body.message.equals("occupied")) {
-//                        DriverTransactionActivity.changeFragment(DriverWaitingTransactionFragment.newInstance(), true);
                         setNotOnServeState();
-                        EventBus.getDefault().post(new SetServingEvent(0));
                     } else {
                         setOnServeState();
-                        EventBus.getDefault().post(new SetServingEvent(1));
                     }
                 } else {
                     Toast.makeText(getContext(), response.body.message, Toast.LENGTH_SHORT).show();
@@ -111,7 +132,8 @@ public class DriverWaitingFragment extends Fragment implements Injectable {
 
     private void setOnServeState() {
         binding.waitingProgressBar.setVisibility(View.VISIBLE);
-        binding.startSearchingPassengerButton.setText("On Serve");
+        binding.waitingText.setVisibility(View.VISIBLE);
+        binding.startSearchingPassengerButton.setText("On Service");
         binding.signOutTaxiButton.setEnabled(false);
         binding.cancelSearchButton.setEnabled(true);
         binding.startSearchingPassengerButton.setEnabled(false);
@@ -119,7 +141,8 @@ public class DriverWaitingFragment extends Fragment implements Injectable {
 
     private void setNotOnServeState() {
         binding.waitingProgressBar.setVisibility(View.GONE);
-        binding.startSearchingPassengerButton.setText("Not On Serve");
+        binding.waitingText.setVisibility(View.GONE);
+        binding.startSearchingPassengerButton.setText("Not On Service");
         binding.cancelSearchButton.setEnabled(false);
         binding.signOutTaxiButton.setEnabled(true);
         binding.startSearchingPassengerButton.setEnabled(true);
@@ -137,32 +160,16 @@ public class DriverWaitingFragment extends Fragment implements Injectable {
                     if (dialogBinding.typeRadioGroup.getCheckedRadioButtonId() != -1) {
                         switch (dialogBinding.typeRadioGroup.getCheckedRadioButtonId()) {
                             case R.id.singleGroupButton:
-                                requirement = 1;
+                                requirement = "p";
                                 break;
                             case R.id.rideSharingButton:
-                                requirement = 2;
+                                requirement = "s";
                                 break;
                             case R.id.bothSelectButton:
-                                requirement = 3;
+                                requirement = "b";
                                 break;
                             default:
-                                requirement = 1;
-                                break;
-                        }
-                    }
-                    if(dialogBinding.locationRadioGroup.getCheckedRadioButtonId() != -1) {
-                        switch (dialogBinding.locationRadioGroup.getCheckedRadioButtonId()) {
-                            case R.id.toIslandButton:
-                                location = 1;
-                                break;
-                            case R.id.notToIslandButton:
-                                location = 2;
-                                break;
-                            case R.id.doesNotMatterButton:
-                                location = 3;
-                                break;
-                            default:
-                                location = 3;
+                                requirement = "b";
                                 break;
                         }
                     }
@@ -180,17 +187,17 @@ public class DriverWaitingFragment extends Fragment implements Injectable {
      * Start service
      */
     private void startOnServe() {
-        viewModel.setOccupied(Session.getUserId(getContext()), 1, requirement, location);
+        viewModel.setOccupied(driverId, 1, requirement);
     }
 
     View.OnClickListener cancelSearch = view -> {
-        viewModel.setOccupied(Session.getUserId(getContext()), 0, 0, 0);
+        viewModel.setOccupied(driverId, 0, requirement);
     };
 
     View.OnClickListener signoutTaxi = view -> {
         Log.d("Sign out Taxi", Session.getTaxiId(getContext()) + "");
         if(Session.getTaxiId(getContext()) != 0) {
-            viewModel.signoutTaxi(Session.getTaxiId(getContext()), Session.getUserId(getContext()));
+            viewModel.signoutTaxi(Session.getTaxiId(getActivity()), Session.getUserId(getContext()));
             viewModel.getSignOutTaxiResponse().observe(this, response -> {
                 if(response.isSuccessful()) {
                     if(response.body.success == 1) {

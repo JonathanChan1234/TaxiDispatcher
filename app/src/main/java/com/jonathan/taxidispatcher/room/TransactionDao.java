@@ -19,7 +19,7 @@ public abstract class TransactionDao {
     public abstract LiveData<List<Transcation>> loadTransactionHistory();
 
     @Query("SELECT * FROM Transcation WHERE id in (:transcationId)")
-    public abstract LiveData<Transcation> loadTransactionById(Integer transcationId);
+    public abstract Transcation loadTransactionById(Integer transcationId);
 
     @Query("UPDATE Transcation SET status = :status WHERE id=:transcationId")
     public abstract void updateTransactionStatus(Integer status, Integer transcationId);

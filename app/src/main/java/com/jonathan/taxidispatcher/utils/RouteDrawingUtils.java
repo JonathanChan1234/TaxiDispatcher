@@ -2,8 +2,12 @@ package com.jonathan.taxidispatcher.utils;
 
 import android.graphics.Color;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Cap;
+import com.google.android.gms.maps.model.CustomCap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.jonathan.taxidispatcher.R;
 import com.jonathan.taxidispatcher.data.model.DirectionModel;
 
 import java.util.ArrayList;
@@ -33,8 +37,39 @@ public class RouteDrawingUtils {
             }
 
             lineOptions.addAll(points);
-            lineOptions.width(12);
-            lineOptions.color(Color.RED);
+            lineOptions.width(16);
+            lineOptions.color(Color.BLUE);
+            lineOptions.geodesic(true);
+        }
+
+        return lineOptions;
+    }
+
+    public static PolylineOptions getNavigationLine(DirectionModel model) {
+        List<List<HashMap<String, String>>> route = parse(model);
+        ArrayList points;
+        PolylineOptions lineOptions = null;
+
+        for (int i = 0; i < route.size(); i++) {
+            points = new ArrayList();
+            lineOptions = new PolylineOptions();
+
+            List<HashMap<String, String>> path = route.get(i);
+
+            for (int j = 0; j < path.size(); j++) {
+                HashMap<String, String> point = path.get(j);
+
+                double lat = Double.parseDouble(point.get("lat"));
+                double lng = Double.parseDouble(point.get("lng"));
+                LatLng position = new LatLng(lat, lng);
+
+                points.add(position);
+            }
+
+            lineOptions.addAll(points);
+            lineOptions.width(16);
+            lineOptions.color(Color.BLUE);
+            lineOptions.startCap(new CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.vehicle), 16));
             lineOptions.geodesic(true);
         }
 

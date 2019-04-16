@@ -19,6 +19,7 @@ import com.jonathan.taxidispatcher.data.model.Driver;
 import com.jonathan.taxidispatcher.data.model.DriverLocation;
 import com.jonathan.taxidispatcher.data.model.RideShare;
 import com.jonathan.taxidispatcher.data.model.RideShareTransaction;
+import com.jonathan.taxidispatcher.event.DriverReachTimerEvent;
 import com.jonathan.taxidispatcher.event.Location;
 import com.jonathan.taxidispatcher.event.PassengerShareRideFound;
 import com.jonathan.taxidispatcher.event.TimerEvent;
@@ -33,6 +34,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.Timer;
 
 import dagger.android.AndroidInjection;
 import io.socket.client.Ack;
@@ -47,6 +53,8 @@ public class PassengerShareRideSocketService extends Service {
     public static final String LOCATION_UPDATE_TO_PASSENGER = "locationUpdateToPassenger";
     public static final String JOIN_SHARE_RIDE_ROOM = "joinShareRideRoom";
     public static final String GET_DRIVER_LOCATION = "getDriverLocation";
+    public static final String STOP_GET_DRIVER_LOCATION = "stopGetDriverLocation";
+    public static final String SHARE_RIDE_DRIVER_REACH = "shareRideDriverReach";
     // Notification Manager
     NotificationManager nm;
     NotificationCompat.Builder notificationBuilder_android8;
@@ -60,6 +68,7 @@ public class PassengerShareRideSocketService extends Service {
     private boolean isConnected;
     Handler handler;
     Runnable updateLocation;
+    private boolean driverReachTimerThreadStarted = false;
 
     public PassengerShareRideSocketService() {
     }
@@ -88,7 +97,11 @@ public class PassengerShareRideSocketService extends Service {
                     stopSelf();
                     break;
                 case GET_DRIVER_LOCATION:
-                    initRunnable(intent.getIntExtra("driverId", 0));
+                    getDriverPosition(intent.getIntExtra("driverId", 0));
+                    break;
+                case STOP_GET_DRIVER_LOCATION:
+                    if (handler != null && updateLocation != null)
+                        handler.removeCallbacks(updateLocation);
                     break;
                 default:
                     break;
@@ -97,9 +110,9 @@ public class PassengerShareRideSocketService extends Service {
         return START_STICKY; //START_STICKY: resume the service right (without the intent parameter) after it is killed
     }
 
-    private void initRunnable(int id) {
-        if(handler == null) handler = new Handler(Looper.getMainLooper());
-        if(updateLocation != null) handler.removeCallbacks(updateLocation);
+    private void getDriverPosition(int id) {
+        if (handler == null) handler = new Handler(Looper.getMainLooper());
+        if (updateLocation != null) handler.removeCallbacks(updateLocation);
         updateLocation = new Runnable() {
             @Override
             public void run() {
@@ -138,7 +151,7 @@ public class PassengerShareRideSocketService extends Service {
             IO.Options opts = new IO.Options();
             opts.timeout = -1;
             opts.reconnection = true;
-            mSocket = IO.socket("http://192.168.86.183:3000", opts);
+            mSocket = IO.socket("http://" + Session.getIP(this) + ":3000", opts);
             connectSocket();
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -152,6 +165,7 @@ public class PassengerShareRideSocketService extends Service {
         mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
         mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onTimeout);
         mSocket.on(SHARE_RIDE_PAIRING_SUCCESS, shareRideFound);
+        mSocket.on(SHARE_RIDE_DRIVER_REACH, driverReach);
     }
 
     private void disconnectSocket() {
@@ -252,10 +266,13 @@ public class PassengerShareRideSocketService extends Service {
         if (Build.VERSION.SDK_INT > 26) {
             notificationBuilder_android8.setContentText(message);
             notificationBuilder_android8.setOnlyAlertOnce(false);
+            notificationBuilder_android8.setStyle(new NotificationCompat.BigTextStyle()
+                    .bigText(message));
             nm.notify(1, notificationBuilder_android8.build());
         } else {
             notificationBuilder.setContentText(message);
             notificationBuilder.setOnlyAlertOnce(false);
+            notificationBuilder.setStyle(new Notification.BigTextStyle().bigText(message));
             nm.notify(1, notificationBuilder.build());
         }
     }
@@ -278,12 +295,68 @@ public class PassengerShareRideSocketService extends Service {
                 JSONObject responseData = new JSONObject();
                 responseData.put("transcation", transaction.id);
                 mSocket.emit(JOIN_SHARE_RIDE_ROOM, responseData);
-                initRunnable(transaction.driver.id);
+                getDriverPosition(transaction.driver.id);
             } catch (JSONException e) {
                 Timber.e(e);
             }
         }
     };
+
+    private Emitter.Listener driverReach = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            try {
+                JSONObject data = (JSONObject) args[0];
+                Gson gson = new Gson();
+                RideShareTransaction transaction = gson.fromJson(data.getJSONObject("transcation").toString(),
+                        RideShareTransaction.class);
+                eventAck("passenger:" + Session.getUserId(PassengerShareRideSocketService.this),
+                        SHARE_RIDE_DRIVER_REACH);
+                String time = data.getString("time");
+                startTimer(time);
+            } catch (JSONException e) {
+
+            }
+        }
+    };
+
+    private void startTimer(String time) {
+        Calendar timeoutTime = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("ENG"));
+        try {
+            timeoutTime.setTime(format.parse(time));
+            timeoutTime.add(Calendar.MINUTE, 5);
+            timeoutTime.getTime().getTime();
+            Calendar calendar = Calendar.getInstance();
+            int timeDifference = (int) (timeoutTime.getTime().getTime() - calendar.getTime().getTime());
+            if (timeDifference > 0) notifyUser("Your driver has reached the pick-up point");
+            driverReachTimerThreadStarted = true;
+            Thread timerThread = new Thread(() -> {
+                try {
+                    int count = timeDifference / 1000;
+                    while (count > 0 && driverReachTimerThreadStarted) {
+                        Thread.sleep(1000);
+                        count--;
+                        int minute = (count % 3600) / 60;
+                        int second = (count % 60);
+
+                        //Update the notification bar
+                        notifyUser("Your driver have already reached the pick-up point \n" +
+                                "Timeout Time: " + String.format("%02d", minute) +
+                                ":" + String.format("%02d", second));
+
+                        // Update the UI
+                        EventBus.getDefault().post(new TimerEvent(minute, second));
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+            timerThread.start();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void eventAck(String key, String event) {
         if (mSocket != null) {

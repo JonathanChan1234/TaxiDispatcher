@@ -3,6 +3,7 @@ package com.jonathan.taxidispatcher.ui.passenger_transaction;
 
 import android.app.AlertDialog;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -23,21 +24,22 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.jonathan.taxidispatcher.R;
 import com.jonathan.taxidispatcher.api.APIInterface;
 import com.jonathan.taxidispatcher.data.model.Driver;
-import com.jonathan.taxidispatcher.data.model.DriverLocation;
 import com.jonathan.taxidispatcher.data.model.StandardResponse;
 import com.jonathan.taxidispatcher.data.model.Transcation;
 import com.jonathan.taxidispatcher.databinding.FragmentPassengerDriverConnectedBinding;
 import com.jonathan.taxidispatcher.di.Injectable;
-import com.jonathan.taxidispatcher.event.LocationUpdateEvent;
-import com.jonathan.taxidispatcher.event.PassengerDriverReachEvent;
-import com.jonathan.taxidispatcher.event.TimerEvent;
+import com.jonathan.taxidispatcher.event.DriverReachTimerEvent;
+import com.jonathan.taxidispatcher.event.Location;
 import com.jonathan.taxidispatcher.factory.PassengerTransactionViewModelFactory;
+import com.jonathan.taxidispatcher.service.PassengerSocketService;
 import com.jonathan.taxidispatcher.ui.passenger_main.PassengerMainActivity;
+import com.jonathan.taxidispatcher.utils.MapUtils;
 import com.jonathan.taxidispatcher.utils.RouteDrawingUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -57,6 +59,8 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
     FragmentPassengerDriverConnectedBinding binding;
     PassengerTransactionViewModel viewModel;
 
+    Context applicationContext;
+
     @Inject
     PassengerTransactionViewModelFactory factory;
 
@@ -65,8 +69,9 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
     Transcation transcation;
     Driver driver;
     Boolean isDriverReached = false;
-    MarkerOptions locationOptions = new MarkerOptions();
+    MarkerOptions locationOptions;
     PolylineOptions lines = null;
+    private Marker driverMarker;
 
     public PassengerDriverConnectedFragment() {
         // Required empty public constructor
@@ -99,35 +104,35 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
         viewModel = ViewModelProviders.of(getActivity(), factory).get(PassengerTransactionViewModel.class);
         transcation = viewModel.getCurrentTranscation();
         driver = viewModel.getDriver();
-        if (transcation.status == 201) isDriverReached = true;
         initUI();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        applicationContext = context;
     }
 
     @Override
     public void onResume() {
         super.onResume();
         EventBus.getDefault().register(this);
+        if(driver != null) {
+            Intent intent = new Intent(getActivity(), PassengerSocketService.class);
+            intent.putExtra("driverId", driver.id);
+            intent.setAction(PassengerSocketService.GET_DRIVER_LOCATION);
+            applicationContext.startService(intent);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
         EventBus.getDefault().unregister(this);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onLocationUpdateEvent(DriverLocation event) {
-        if (mMap != null) {
-            if (transcation != null && driver != null) {
-                driverPosition = new LatLng(Double.parseDouble(event.location.latitude),
-                        Double.parseDouble(event.location.longitude));
-                if (!isDriverReached) {
-                    viewModel.searchRoute(driverPosition);
-                } else {
-                    viewModel.trackLocation(driverPosition);
-                }
-                Log.i("location update event", "map update");
-            }
+        if(driver != null) {
+            Intent intent = new Intent(getActivity(), PassengerSocketService.class);
+            intent.setAction(PassengerSocketService.STOP_GET_DRIVER_LOCATION);
+            applicationContext.startService(intent);
         }
     }
 
@@ -173,6 +178,7 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
                 locationOptions.position(driverPosition);
                 // Add predicted arrival time
                 binding.arrivalTimeText.setText(String.valueOf(response.body.routes.get(0).legs.get(0).duration.value / 60) + " minutes");
+                setMarker();
             } else {
                 Toast.makeText(getContext(), "Cannot connect to the Internet", Toast.LENGTH_SHORT).show();
             }
@@ -198,13 +204,22 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
                                     @Override
                                     public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
                                         if (response.isSuccessful()) {
-                                            if (response.body().success == 1) {
-                                                Log.d("Confirm", "success");
-                                                Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
-                                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                startActivity(intent);
+                                            if(response.body() != null) {
+                                                if (response.body().success == 1) {
+                                                    Log.d("Confirm", "success");
+                                                    Intent intent = new Intent(getActivity(), RatingActivity.class);
+                                                    intent.putExtra("route", route);
+                                                    if(driver != null) {
+                                                        intent.putExtra("driver", driver.username);
+                                                        intent.putExtra("driverId", driver.id);
+                                                    }
+                                                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                    startActivity(intent);
+                                                } else {
+                                                    Log.d("Confirm", "invalid");
+                                                }
                                             } else {
-                                                Log.d("Confirm", "invalid");
+                                                backToMainActivity();
                                             }
                                         }
                                     }
@@ -228,9 +243,7 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
                     if(response.isSuccessful()) {
                         if(response.body().success == 1) {
                             Toast.makeText(getContext(), "Cancel successfully", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
+                            backToMainActivity();
                         } else {
                             Toast.makeText(getContext(), "You cannot cancel at this stage", Toast.LENGTH_SHORT).show();
                         }
@@ -257,9 +270,7 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
                                 if(response.isSuccessful()) {
                                     if(response.body().success == 1) {
                                         Toast.makeText(getContext(), "Cancel successfully", Toast.LENGTH_SHORT).show();
-                                        Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        startActivity(intent);
+                                        backToMainActivity();
                                     } else {
                                         Toast.makeText(getContext(), "You cannot cancel at this stage", Toast.LENGTH_SHORT).show();
                                     }
@@ -278,22 +289,45 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
         });
     }
 
-    /**
-     * Driver has reached the pick-up point. The time counter has started.
-     *
-     * @param event
-     */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onTimerEvent(TimerEvent event) {
+    public void onTimerEvent(DriverReachTimerEvent event) {
         isDriverReached = true;
-        String text = "Your Driver has reached the pick-up point\n Please arrive within"
+        String text = "Your Driver has reached the pick-up point\n Please arrive within "
                 + String.format("%02d", event.getMinute())
                 + ":" + String.format("%02d", event.getSecond());
         binding.arrivalTimeText.setText(text);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onLocationUpdateEvent(Location event) {
+        if (mMap != null) {
+            if (transcation != null && driver != null) {
+                driverPosition = new LatLng(Double.parseDouble(event.latitude),
+                        Double.parseDouble(event.longitude));
+                if(driverMarker == null) {
+                    locationOptions = new MarkerOptions();
+                    locationOptions.position(driverPosition);
+                    locationOptions.title("Your Taxi Driver");
+                    locationOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.vehicle));
+                    driverMarker = mMap.addMarker(locationOptions);
+                } else {
+                    driverMarker.setPosition(driverPosition);
+                }
+
+                if (!isDriverReached) {
+                    viewModel.searchRoute(driverPosition);
+                } else {
+                    viewModel.trackLocation(driverPosition);
+                }
+                Log.i("location update event", "map update");
+            }
+        }
+    }
+
     private void setMarker() {
+        if(getActivity() != null) MapUtils.getLocationPermission(getActivity());
         if (transcation != null) {
+            MapUtils.updateLocationUI(mMap);
             MarkerOptions originOptions = new MarkerOptions();
             originOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
             originOptions.title("Pick-up");
@@ -310,11 +344,24 @@ public class PassengerDriverConnectedFragment extends Fragment implements OnMapR
             LatLng latlng = new LatLng(Double.parseDouble(transcation.startLat), Double.parseDouble(transcation.startLong));
             Log.i("Passenger Found", latlng.latitude + ", " + latlng.longitude);
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-            mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
-            if (lines != null && locationOptions != null) {
+            mMap.moveCamera(CameraUpdateFactory.zoomTo(14));
+
+            if (lines != null) {
                 mMap.addPolyline(lines);
-                mMap.addMarker(locationOptions);
             }
         }
+    }
+
+    private void backToMainActivity() {
+        stopTimer();
+        Intent intent = new Intent(getActivity(), PassengerMainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+    private void stopTimer() {
+        Intent intent = new Intent(getActivity(), PassengerSocketService.class);
+        intent.setAction(PassengerSocketService.STOP_TIMER);
+        getActivity().startService(intent);
     }
 }

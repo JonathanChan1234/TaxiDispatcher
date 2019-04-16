@@ -3,29 +3,25 @@ package com.jonathan.taxidispatcher.api;
 import android.support.annotation.Nullable;
 
 import com.jonathan.taxidispatcher.data.model.AccountDriverResponse;
-import com.jonathan.taxidispatcher.data.model.AccountResponse;
 import com.jonathan.taxidispatcher.data.model.AccountUserResponse;
 import com.jonathan.taxidispatcher.data.model.DriverTransactionType;
+import com.jonathan.taxidispatcher.data.model.RideShareCollection;
 import com.jonathan.taxidispatcher.data.model.RideSharePairingResponse;
 import com.jonathan.taxidispatcher.data.model.RideShareResource;
 import com.jonathan.taxidispatcher.data.model.RideShareTransactionResource;
 import com.jonathan.taxidispatcher.data.model.StandardResponse;
 import com.jonathan.taxidispatcher.data.model.TaxiSignInResponse;
 import com.jonathan.taxidispatcher.data.model.Taxis;
-import com.jonathan.taxidispatcher.data.model.Transcation;
+import com.jonathan.taxidispatcher.data.model.TranscationCollection;
 import com.jonathan.taxidispatcher.data.model.TranscationResource;
 
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.Multipart;
 import retrofit2.http.POST;
-import retrofit2.http.Part;
 
 public interface APIInterface {
-    // Personal Ride Transaction
+    //    ---------------Personal Ride Account API--------------------------
     @FormUrlEncoded
     @POST("transcation/startTranscation")
     Call<TranscationResource> startTranscation(@Field("userid")Integer userid,
@@ -55,8 +51,23 @@ public interface APIInterface {
     Call<TranscationResource> searchForRecentTranscation(@Field("id")Integer userid);
 
     @FormUrlEncoded
+    @POST("transcation/driverResponseOrder")
+    Call<StandardResponse> driverResponseOrder(@Field("transcationId")Integer transcationId,
+                                   @Field("driverId") Integer driverId,
+                                   @Field("response") Integer response);
+
+    @FormUrlEncoded
+    @POST("transcation/passengerConfirmOrder")
+    Call<StandardResponse> passengerConfirmOrder(@Field("transcationId")Integer transcationId,
+                                     @Field("response") Integer response);
+
+    @FormUrlEncoded
     @POST("transcation/cancelOrder")
     Call<StandardResponse> cancelOrder(@Field("id") Integer transcationId);
+
+    @FormUrlEncoded
+    @POST("transcation/passengerTimeout")
+    Call<StandardResponse> passengerTimeout(@Field("id") Integer transactionId);
 
     @FormUrlEncoded
     @POST("transcation/driverReachPickupPoint")
@@ -78,7 +89,11 @@ public interface APIInterface {
     @POST("transcation/finishRide")
     Call<StandardResponse> driverFinishRide(@Field("id") Integer transactionId);
 
-    // Share Ride
+    @FormUrlEncoded
+    @POST("transcation/checkDriverOrder")
+    Call<TranscationCollection> checkDriverOrder(@Field("id") Integer id);
+
+    //    ---------------Share Ride Account API--------------------------
     @FormUrlEncoded
     @POST("rideShare/makeShareRide")
     Call<RideShareResource> startRideShare(@Field("userid")Integer userid,
@@ -101,10 +116,38 @@ public interface APIInterface {
     Call<RideSharePairingResponse> getShareRidePairing(@Field("id") Integer id);
 
     @FormUrlEncoded
+    @POST("rideShare/driverResponseOrder")
+    Call<StandardResponse> driverResponseShareRideOrder(@Field("id") Integer transactionId,
+                                                        @Field("driverId") Integer driverId,
+                                                        @Field("response") Integer response);
+
+    @FormUrlEncoded
     @POST("rideShare/cancelOrder")
     Call<StandardResponse> cancelShareRideOrder(@Field("id") Integer transactionID);
 
-    // Passenger Account
+    @FormUrlEncoded
+    @POST("rideShare/driverReachPickup")
+    Call<RideShareTransactionResource> driverReachPickupShareRide(@Field("id") Integer id,
+                                                      @Field("rideshareId") Integer rideshareId);
+
+    @FormUrlEncoded
+    @POST("rideShare/passengerConfirmRide")
+    Call<StandardResponse> passengerConfirmShareRide(@Field("id") Integer id,
+                                                     @Field("rideshareId") Integer rideshareId);
+
+    @FormUrlEncoded
+    @POST("rideShare/driverFinishRide")
+    Call<StandardResponse> driverFinishShareRide(@Field("id") Integer id);
+
+    @FormUrlEncoded
+    @POST("rideShare/driverExitRide")
+    Call<Void> driverExitShareRide(@Field("id") Integer id);
+
+    @FormUrlEncoded
+    @POST("rideShare/driverTransactionHistory")
+    Call<RideShareCollection> driverShareRideHistory(@Field("id") Integer id);
+
+//    ---------------Passenger Account API--------------------------
     @FormUrlEncoded
     @POST("user/login")
     Call<AccountUserResponse> passengerSignIn(
@@ -130,7 +173,7 @@ public interface APIInterface {
             @Field("id") Integer id
     );
 
-    // Driver Account
+    //    ---------------Taxi Driver Account API--------------------------
     @FormUrlEncoded
     @POST("driver/login")
     Call<AccountDriverResponse> driverSignIn(
@@ -151,7 +194,7 @@ public interface APIInterface {
     );
 
     @FormUrlEncoded
-    @POST("user/logout")
+    @POST("driver/logout")
     Call<StandardResponse> driverLogout(
             @Field("id") Integer id
     );
@@ -160,14 +203,15 @@ public interface APIInterface {
     @POST("driver/setOccupied")
     Call<StandardResponse> setOccupied(
             @Field("id") Integer id,
-            @Field("occupied") Integer occupied
+            @Field("occupied") Integer occupied,
+            @Field("type") String type
     );
 
     @FormUrlEncoded
     @POST("driver/findCurrentTransaction")
     Call<DriverTransactionType> checkDriverTransactionStatus(@Field("id") Integer id);
 
-    //Taxi Account
+    //    ---------------Taxi Account API--------------------------
     @FormUrlEncoded
     @POST("taxi/checkDuplicate")
     Call<StandardResponse> checkDuplicate(
@@ -208,5 +252,14 @@ public interface APIInterface {
     Call<StandardResponse> signoutTaxi(
             @Field("taxiID") Integer taxiID,
             @Field("driverID") Integer driverID
+    );
+
+    //    ---------------Rating API--------------------------
+    @FormUrlEncoded
+    @POST("rating/rateDriver")
+    Call<Void> rateDriver(
+            @Field("id") Integer driverId,
+            @Field("transcation") Integer transcationID,
+            @Field("rating") Integer rating
     );
 }

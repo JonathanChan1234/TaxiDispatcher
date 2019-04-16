@@ -75,7 +75,7 @@ public class DriverScanQRFragment extends Fragment implements Injectable {
         DriverScanQRFragmentPermissionsDispatcher.initUIWithPermissionCheck(this);
     }
 
-    @NeedsPermission(Manifest.permission.CAMERA)
+    @NeedsPermission({Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION})
     public void initUI() {
         binding.scanQRcodeButton.setOnClickListener(view -> {
             IntentIntegrator integrator = IntentIntegrator.forSupportFragment(this);

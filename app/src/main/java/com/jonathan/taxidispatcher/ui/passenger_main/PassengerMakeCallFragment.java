@@ -207,15 +207,15 @@ public class PassengerMakeCallFragment extends Fragment implements
             startActivityForResult(searchPlaceIntent, DESTINATION_REQUEST_CODE);
         });
         binding.taxiRequestButton.setOnClickListener(toTransactionDetails);
-        binding.timePicker.setOnClickListener(view -> {
-            Calendar c = Calendar.getInstance();
-            int minute = c.get(Calendar.MINUTE);
-            int hour = c.get(Calendar.HOUR_OF_DAY);
-            new TimePickerDialog(applicationContext, (pickerView, targetHour, targetMinute) -> {
-                binding.timePicker.setText(targetHour + ":" + targetMinute);
-                binding.timePicker.setTextSize(18);
-            }, hour, minute, false).show();
-        });
+//        binding.timePicker.setOnClickListener(view -> {
+//            Calendar c = Calendar.getInstance();
+//            int minute = c.get(Calendar.MINUTE);
+//            int hour = c.get(Calendar.HOUR_OF_DAY);
+//            new TimePickerDialog(applicationContext, (pickerView, targetHour, targetMinute) -> {
+//                binding.timePicker.setText(targetHour + ":" + targetMinute);
+//                binding.timePicker.setTextSize(18);
+//            }, hour, minute, false).show();
+//        });
     }
 
     private void updateUI() {
@@ -403,7 +403,7 @@ public class PassengerMakeCallFragment extends Fragment implements
             dataBundle.putDouble(DES_LONG, marker[1].longitude);
             dataBundle.putString(START_ADDR, binding.pickUpPointSelector.getText().toString());
             dataBundle.putString(DES_ADDR, binding.destinationPointSelector.getText().toString());
-            dataBundle.putString(TIME, binding.timePicker.getText().toString());
+            dataBundle.putString(TIME, null);
             viewModel.transcationData.setValue(dataBundle);
             PassengerMainActivity.toConfirmFragment();
         } else {
